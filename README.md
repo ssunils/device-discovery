@@ -26,14 +26,14 @@ The web interface shows real-time RTT measurements, device state detection, and 
 ```bash
 # Clone repository
 git clone https://github.com/gommzystudio/device-activity-tracker.git
-cd whatsapp-activity-tracker
+cd device-activity-tracker
 
 # Install dependencies
 npm install
 cd client && npm install && cd ..
 ```
 
-**Requirements:** Node.js 16+, npm, WhatsApp account
+**Requirements:** Node.js 20+, npm, WhatsApp account
 
 ## Usage
 
