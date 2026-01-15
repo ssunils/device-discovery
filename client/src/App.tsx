@@ -137,7 +137,7 @@ function App() {
             </div>
             <div>
               <h1 className="text-2xl font-black bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent">
-                NexusTracker
+                DeviceTracker
               </h1>
               <div className="flex items-center gap-2 mt-0.5">
                 <span className="flex items-center gap-1.5 text-[10px] uppercase tracking-widest font-bold text-slate-500">
