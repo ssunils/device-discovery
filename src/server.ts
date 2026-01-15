@@ -23,6 +23,7 @@ import {
   getSignalAccounts,
   checkSignalNumber,
 } from "./signal-tracker.js";
+import { historyManager } from "./history-manager.js";
 
 // Configuration
 const SIGNAL_API_URL = process.env.SIGNAL_API_URL || "http://localhost:8080";
@@ -414,6 +415,12 @@ io.on("connection", (socket) => {
           console.log(
             `[SIGNAL] Number ${targetNumber} is registered, starting tracking...`
           );
+
+          // Log search to history
+          historyManager.logEvent("search", signalId, "signal", {
+            number: cleanNumber,
+          });
+
           const tracker = new SignalTracker(
             SIGNAL_API_URL,
             signalAccountNumber,
@@ -460,6 +467,11 @@ io.on("connection", (socket) => {
           const result = results?.[0];
 
           if (result?.exists) {
+            // Log search to history
+            historyManager.logEvent("search", result.jid, "whatsapp", {
+              number: cleanNumber,
+            });
+
             const tracker = new WhatsAppTracker(sock, result.jid);
             tracker.setProbeMethod(globalProbeMethod);
             trackers.set(result.jid, { tracker, platform: "whatsapp" });
@@ -548,6 +560,16 @@ io.on("connection", (socket) => {
 
     io.emit("probe-method", method);
     console.log(`Probe method changed to: ${method}`);
+  });
+
+  socket.on("get-history", async () => {
+    const history = await historyManager.getHistory();
+    socket.emit("history-data", history);
+  });
+
+  socket.on("clear-history", async () => {
+    await historyManager.clearHistory();
+    socket.emit("history-cleared");
   });
 });
 

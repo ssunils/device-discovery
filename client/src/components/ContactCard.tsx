@@ -11,10 +11,13 @@ import {
 import {
   Square,
   Activity,
-  Wifi,
   Smartphone,
-  Monitor,
   MessageCircle,
+  Shield,
+  Zap,
+  Cpu,
+  Globe,
+  Apple
 } from "lucide-react";
 import clsx from "clsx";
 
@@ -70,270 +73,200 @@ export function ContactCard({
         devices[0].state
       : "Unknown";
 
-  // Blur phone number in privacy mode
   const blurredNumber = privacyMode
     ? displayNumber.replace(/\d/g, "•")
     : displayNumber;
 
+  const getOsIcon = (os: string) => {
+    if (os.toLowerCase().includes("android")) return <Smartphone size={14} className="text-green-500" />;
+    if (os.toLowerCase().includes("ios") || os.toLowerCase().includes("apple") || os.toLowerCase().includes("iphone")) 
+      return <Apple size={14} className="text-blue-400" />;
+    return <Cpu size={14} className="text-slate-400" />;
+  };
+
   return (
-    <div className="bg-gradient-to-br from-white to-gray-50 rounded-xl shadow-lg border border-gray-200 overflow-hidden">
-      {/* Header with Stop Button */}
-      <div className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <span
-            className={clsx(
-              "px-2 py-1 rounded text-xs font-medium flex items-center gap-1",
-              platform === "whatsapp"
-                ? "bg-green-100 text-green-700"
-                : "bg-blue-100 text-blue-700"
-            )}
-          >
-            <MessageCircle size={12} />
-            {platform === "whatsapp" ? "WhatsApp" : "Signal"}
-          </span>
-          <h3 className="text-lg font-semibold text-gray-900">
-            {blurredNumber}
-          </h3>
+    <div className="bg-[#16161a] rounded-2xl border border-slate-800 overflow-hidden shadow-2xl transition-all hover:border-slate-700 group">
+      {/* Header */}
+      <div className="bg-[#1a1a20] border-b border-slate-800 px-6 py-4 flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <div className={`p-2 rounded-xl ${platform === "whatsapp" ? "bg-green-500/10 text-green-500" : "bg-blue-500/10 text-blue-500"}`}>
+            {platform === "whatsapp" ? <MessageCircle size={18} /> : <Shield size={18} />}
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <h3 className="text-base font-black text-white tracking-tight leading-tight">
+                {blurredNumber}
+              </h3>
+              <span className="text-[10px] font-black px-2 py-0.5 rounded bg-slate-800 text-slate-500 uppercase tracking-widest">
+                {platform}
+              </span>
+            </div>
+          </div>
         </div>
         <button
           onClick={onRemove}
-          className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 flex items-center gap-2 font-medium transition-colors text-sm"
+          className="p-2 text-slate-500 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-all"
+          title="Terminate Trace"
         >
-          <Square size={16} /> Stop
+          <Square size={18} fill="currentColor" className="opacity-20" />
         </button>
       </div>
 
-      <div className="p-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {/* Status Card */}
-          <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 flex flex-col items-center text-center">
-            <div className="relative mb-4">
-              <div className="w-32 h-32 rounded-full overflow-hidden bg-gray-100 border-4 border-white shadow-md">
+      <div className="p-6 space-y-6">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          {/* Visual Status */}
+          <div className="lg:col-span-4 flex flex-col items-center justify-center p-6 bg-[#0a0a0c] rounded-2xl border border-slate-800/50">
+            <div className="relative mb-6">
+              <div className="w-24 h-24 rounded-2xl overflow-hidden bg-slate-900 border-2 border-slate-800 shadow-2xl rotate-3 group-hover:rotate-0 transition-transform duration-500">
                 {profilePic ? (
                   <img
                     src={profilePic}
-                    alt="Profile"
+                    alt="Target"
                     className={clsx(
-                      "w-full h-full object-cover transition-all duration-200",
-                      privacyMode && "blur-xl scale-110"
+                      "w-full h-full object-cover grayscale brightness-75 group-hover:grayscale-0 group-hover:brightness-100 transition-all duration-500",
+                      privacyMode && "blur-xl"
                     )}
-                    style={
-                      privacyMode
-                        ? {
-                            filter: "blur(16px) contrast(0.8)",
-                          }
-                        : {}
-                    }
                   />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center text-gray-400">
-                    No Image
+                  <div className="w-full h-full flex items-center justify-center">
+                    <Shield size={32} className="text-slate-800" />
                   </div>
                 )}
               </div>
               <div
                 className={clsx(
-                  "absolute bottom-2 right-2 w-6 h-6 rounded-full border-2 border-white",
+                  "absolute -bottom-2 -right-2 w-6 h-6 rounded-lg border-4 border-[#0a0a0c] shadow-xl",
                   currentStatus === "OFFLINE"
                     ? "bg-red-500"
                     : currentStatus.includes("Online")
-                    ? "bg-green-500"
-                    : "bg-gray-400"
+                    ? "bg-green-500 animate-pulse"
+                    : "bg-amber-500"
                 )}
               />
             </div>
 
-            <h4 className="text-xl font-bold text-gray-900 mb-1">
-              {blurredNumber}
-            </h4>
-
-            <div className="flex items-center gap-2 mb-4">
-              <span
-                className={clsx(
-                  "px-3 py-1 rounded-full text-sm font-medium",
-                  currentStatus === "OFFLINE"
-                    ? "bg-red-100 text-red-700"
-                    : currentStatus.includes("Online")
-                    ? "bg-green-100 text-green-700"
-                    : currentStatus === "Standby"
-                    ? "bg-yellow-100 text-yellow-700"
-                    : "bg-gray-100 text-gray-700"
-                )}
-              >
+            <div className="text-center">
+              <div className={`text-xs font-black uppercase tracking-[0.2em] mb-1 ${
+                currentStatus.includes("Online") ? "text-green-500" : "text-slate-500"
+              }`}>
                 {currentStatus}
-              </span>
-            </div>
-
-            <div className="w-full pt-4 border-t border-gray-100 space-y-2">
-              <div className="flex justify-between items-center text-sm text-gray-600">
-                <span className="flex items-center gap-1">
-                  <Wifi size={16} /> Official Status
-                </span>
-                <span className="font-medium">{presence || "Unknown"}</span>
               </div>
-              <div className="flex justify-between items-center text-sm text-gray-600">
-                <span className="flex items-center gap-1">
-                  <Smartphone size={16} /> Devices
-                </span>
-                <span className="font-medium">{deviceCount || 0}</span>
+              <div className="text-[10px] text-slate-600 font-bold uppercase tracking-widest flex items-center justify-center gap-1">
+                <Globe size={10} /> {presence || "SIGNAL DEAD"}
               </div>
             </div>
+          </div>
 
-            {/* Device List */}
-            {devices.length > 0 && (
-              <div className="w-full pt-4 border-t border-gray-100 mt-4">
-                <h5 className="text-xs font-semibold text-gray-500 uppercase mb-2">
-                  Device States
-                </h5>
-                <div className="space-y-2">
-                  {devices.map((device, idx) => {
-                    let osType = "Unknown";
-                    let confidence: number | undefined;
+          {/* Metrics Column */}
+          <div className="lg:col-span-8 space-y-4">
+            <div className="grid grid-cols-3 gap-3">
+              <div className="bg-[#0a0a0c] p-3 rounded-xl border border-slate-800/50">
+                <div className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1 flex items-center gap-1">
+                  <Activity size={10} /> AVG RTT
+                </div>
+                <div className="text-lg font-black text-white">
+                  {lastData?.avg.toFixed(0) || "0"}<span className="text-[10px] ml-1 text-slate-600">ms</span>
+                </div>
+              </div>
+              <div className="bg-[#0a0a0c] p-3 rounded-xl border border-slate-800/50">
+                <div className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1 flex items-center gap-1">
+                   MDN
+                </div>
+                <div className="text-lg font-black text-white">
+                  {lastData?.median.toFixed(0) || "0"}<span className="text-[10px] ml-1 text-slate-600">ms</span>
+                </div>
+              </div>
+              <div className="bg-[#0a0a0c] p-3 rounded-xl border border-slate-800/50">
+                <div className="text-[9px] font-black text-indigo-500 uppercase tracking-widest mb-1 flex items-center gap-1">
+                   THR
+                </div>
+                <div className="text-lg font-black text-indigo-400">
+                  {lastData?.threshold.toFixed(0) || "0"}<span className="text-[10px] ml-1 text-slate-600">ms</span>
+                </div>
+              </div>
+            </div>
 
-                    if (typeof device.os === "string") {
-                      osType = device.os;
-                    } else if (
-                      typeof device.os === "object" &&
-                      device.os?.detectedOS
-                    ) {
-                      osType = device.os.detectedOS;
-                      confidence = device.os.confidence;
-                    }
+            {/* Device Analytics */}
+            <div className="bg-[#0a0a0c] p-4 rounded-xl border border-slate-800/50">
+              <h5 className="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em] mb-3">Target Devices</h5>
+              <div className="space-y-2">
+                {devices.length > 0 ? devices.map((device, idx) => {
+                  let osType = "Unknown";
+                  let confidence: number | undefined;
+                  if (typeof device.os === "string") osType = device.os;
+                  else if (typeof device.os === "object" && device.os?.detectedOS) {
+                    osType = device.os.detectedOS;
+                    confidence = device.os.confidence;
+                  }
 
-                    // Determine color based on confidence
-                    const getConfidenceColor = (conf?: number) => {
-                      if (conf === undefined)
-                        return "bg-gray-100 text-gray-700";
-                      if (conf >= 0.9) return "bg-green-100 text-green-700"; // Excellent
-                      if (conf >= 0.75) return "bg-blue-100 text-blue-700"; // Good
-                      if (conf >= 0.6) return "bg-yellow-100 text-yellow-700"; // Fair
-                      return "bg-orange-100 text-orange-700"; // Low
-                    };
-
-                    return (
-                      <div
-                        key={device.jid}
-                        className="flex items-center justify-between gap-2 text-sm py-2 px-2 bg-gray-50 rounded"
-                      >
-                        <div className="flex items-center gap-2 flex-1">
-                          <Monitor size={14} className="text-gray-400" />
-                          <span className="text-gray-600 text-xs">
-                            Device {idx + 1}
-                          </span>
-                          {osType && osType !== "Unknown" && (
-                            <div className="flex items-center gap-1 ml-auto">
-                              <span className="text-xs px-2 py-0.5 rounded font-medium bg-blue-100 text-blue-700">
-                                {osType}
-                              </span>
-                              {confidence !== undefined && (
-                                <span
-                                  className={`text-xs px-2 py-0.5 rounded font-medium ${getConfidenceColor(
-                                    confidence
-                                  )}`}
-                                  title={`Confidence: ${(
-                                    confidence * 100
-                                  ).toFixed(1)}%`}
-                                >
-                                  {(confidence * 100).toFixed(0)}%
-                                </span>
-                              )}
+                  return (
+                    <div key={device.jid} className="flex items-center justify-between p-2 rounded-lg bg-black/20 border border-slate-800/30">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-lg bg-slate-900 border border-slate-800 flex items-center justify-center">
+                          {getOsIcon(osType)}
+                        </div>
+                        <div>
+                          <p className="text-[11px] font-black text-white uppercase tracking-tight">{osType}</p>
+                          {confidence !== undefined && (
+                            <div className="flex items-center gap-2 mt-0.5">
+                              <div className="w-12 h-1 bg-slate-800 rounded-full overflow-hidden">
+                                <div className="h-full bg-indigo-500" style={{ width: `${confidence * 100}%` }} />
+                              </div>
+                              <span className="text-[8px] font-black text-slate-500">{(confidence * 100).toFixed(0)}%</span>
                             </div>
                           )}
                         </div>
-                        <span
-                          className={clsx(
-                            "px-2 py-0.5 rounded text-xs font-medium whitespace-nowrap",
-                            device.state === "OFFLINE"
-                              ? "bg-red-100 text-red-700"
-                              : device.state.includes("Online")
-                              ? "bg-green-100 text-green-700"
-                              : device.state === "Standby"
-                              ? "bg-yellow-100 text-yellow-700"
-                              : "bg-gray-100 text-gray-700"
-                          )}
-                        >
-                          {device.state}
-                        </span>
                       </div>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Metrics & Chart */}
-          <div className="md:col-span-2 space-y-6">
-            {/* Metrics Grid */}
-            <div className="grid grid-cols-3 gap-4">
-              <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-200">
-                <div className="text-sm text-gray-500 mb-1 flex items-center gap-1">
-                  <Activity size={16} /> Current Avg RTT
-                </div>
-                <div className="text-2xl font-bold text-gray-900">
-                  {lastData?.avg.toFixed(0) || "-"} ms
-                </div>
-              </div>
-              <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-200">
-                <div className="text-sm text-gray-500 mb-1">Median (50)</div>
-                <div className="text-2xl font-bold text-gray-900">
-                  {lastData?.median.toFixed(0) || "-"} ms
-                </div>
-              </div>
-              <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-200">
-                <div className="text-sm text-gray-500 mb-1">Threshold</div>
-                <div className="text-2xl font-bold text-blue-600">
-                  {lastData?.threshold.toFixed(0) || "-"} ms
-                </div>
+                      <span className={`text-[10px] font-black px-2 py-0.5 rounded cursor-default ${
+                        device.state.includes("Online") ? "bg-green-500/10 text-green-500" : "bg-slate-800 text-slate-500"
+                      }`}>
+                        {device.state}
+                      </span>
+                    </div>
+                  );
+                }) : (
+                   <div className="text-center py-2 text-[10px] font-black text-slate-700 uppercase tracking-widest">No Active Nodes</div>
+                )}
               </div>
             </div>
-
-            {/* Chart */}
-            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 h-[300px]">
-              <h5 className="text-sm font-medium text-gray-500 mb-4">
-                RTT History & Threshold
-              </h5>
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={data}>
-                  <CartesianGrid
-                    strokeDasharray="3 3"
-                    vertical={false}
-                    stroke="#f0f0f0"
-                  />
-                  <XAxis dataKey="timestamp" hide />
-                  <YAxis domain={["auto", "auto"]} />
-                  <Tooltip
-                    labelFormatter={(t: number) =>
-                      new Date(t).toLocaleTimeString()
-                    }
-                    contentStyle={{
-                      borderRadius: "8px",
-                      border: "none",
-                      boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
-                    }}
-                  />
-                  <Line
-                    type="monotone"
-                    dataKey="avg"
-                    stroke="#3b82f6"
-                    strokeWidth={2}
-                    dot={false}
-                    name="Avg RTT"
-                    isAnimationActive={false}
-                  />
-                  <Line
-                    type="step"
-                    dataKey="threshold"
-                    stroke="#ef4444"
-                    strokeDasharray="5 5"
-                    dot={false}
-                    name="Threshold"
-                    isAnimationActive={false}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
           </div>
+        </div>
+
+        {/* Neural Network Chart (RTT) */}
+        <div className="bg-[#0a0a0c] p-5 rounded-2xl border border-slate-800/50 h-[220px] relative overflow-hidden">
+          <div className="absolute top-4 left-5 z-10">
+            <h5 className="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em] flex items-center gap-2">
+              <Zap size={10} className="text-indigo-500" /> Signal Integrity Log
+            </h5>
+          </div>
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={data}>
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#1e293b" strokeOpacity={0.2} />
+              <XAxis dataKey="timestamp" hide />
+              <YAxis domain={["auto", "auto"]} hide />
+              <Tooltip
+                contentStyle={{ backgroundColor: "#0f172a", border: "1px solid #334155", borderRadius: "12px", fontSize: "10px" }}
+                itemStyle={{ color: "#94a3b8", fontWeight: "bold" }}
+                labelStyle={{ display: "none" }}
+              />
+              <Line
+                type="monotone"
+                dataKey="avg"
+                stroke="#6366f1"
+                strokeWidth={3}
+                dot={false}
+                animationDuration={1000}
+              />
+              <Line
+                type="monotone"
+                dataKey="threshold"
+                stroke="#ef4444"
+                strokeWidth={1}
+                strokeDasharray="5 5"
+                dot={false}
+              />
+            </LineChart>
+          </ResponsiveContainer>
         </div>
       </div>
     </div>

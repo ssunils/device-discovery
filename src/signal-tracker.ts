@@ -6,6 +6,7 @@
  */
 
 import WebSocket from 'ws';
+import { historyManager } from './history-manager.js';
 
 export type ProbeMethod = 'reaction' | 'message';
 
@@ -344,11 +345,22 @@ export class SignalTracker {
                 lastRtt: timeout,
                 lastUpdate: Date.now()
             });
+            historyManager.logEvent('status_change', identifier, 'signal', {
+                state: 'OFFLINE',
+                rtt: timeout,
+            });
         } else {
             const metrics = this.deviceMetrics.get(identifier)!;
+            const oldState = metrics.state;
             metrics.state = 'OFFLINE';
             metrics.lastRtt = timeout;
             metrics.lastUpdate = Date.now();
+            if (oldState !== 'OFFLINE') {
+                historyManager.logEvent('status_change', identifier, 'signal', {
+                    state: 'OFFLINE',
+                    rtt: timeout,
+                });
+            }
         }
 
         logger.info(`Device ${identifier} marked as OFFLINE (no receipt after ${timeout}ms)`);
@@ -416,13 +428,32 @@ export class SignalTracker {
             median = sorted.length % 2 !== 0 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
             threshold = median * 0.9;
 
+            const oldState = metrics.state;
             if (movingAvg < threshold) {
                 metrics.state = 'Online';
             } else {
                 metrics.state = 'Standby';
             }
+
+            if (oldState !== metrics.state) {
+                historyManager.logEvent('status_change', identifier, 'signal', {
+                    state: metrics.state,
+                    rtt: metrics.lastRtt,
+                    avg: movingAvg,
+                    threshold,
+                });
+            }
         } else {
             metrics.state = 'Calibrating...';
+        }
+
+        // Periodically log RTT samples for detailed history
+        if (metrics.rttHistory.length % 5 === 0) {
+            historyManager.logEvent('rtt_sample', identifier, 'signal', {
+                rtt: metrics.lastRtt,
+                avg: movingAvg,
+                state: metrics.state,
+            });
         }
 
         const stateColor = metrics.state === 'Online' ? '🟢' : metrics.state === 'Standby' ? '🟡' : '⚪';

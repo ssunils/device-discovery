@@ -1,21 +1,21 @@
 import React, { useEffect, useState } from "react";
 import {
-  Eye,
-  EyeOff,
   Plus,
-  Trash2,
-  Zap,
   MessageCircle,
   Settings,
+  AlertCircle,
+  Shield,
+  Search,
 } from "lucide-react";
-import { socket, Platform, ConnectionState } from "../App";
+import { socket, Platform, ConnectionState, ProbeMethod } from "../App";
 import { ContactCard } from "./ContactCard";
 import { Login } from "./Login";
 
-type ProbeMethod = "delete" | "reaction";
-
 interface DashboardProps {
   connectionState: ConnectionState;
+  privacyMode: boolean;
+  probeMethod: ProbeMethod;
+  onProbeMethodChange: (method: ProbeMethod) => void;
 }
 
 interface TrackerData {
@@ -47,15 +47,18 @@ interface ContactInfo {
   platform: Platform;
 }
 
-export function Dashboard({ connectionState }: DashboardProps) {
+export function Dashboard({ 
+  connectionState, 
+  privacyMode, 
+  probeMethod, 
+  onProbeMethodChange 
+}: DashboardProps) {
   const [inputNumber, setInputNumber] = useState("");
   const [selectedPlatform, setSelectedPlatform] = useState<Platform>(
     connectionState.whatsapp ? "whatsapp" : "signal"
   );
   const [contacts, setContacts] = useState<Map<string, ContactInfo>>(new Map());
   const [error, setError] = useState<string | null>(null);
-  const [privacyMode, setPrivacyMode] = useState(false);
-  const [probeMethod, setProbeMethod] = useState<ProbeMethod>("reaction");
   const [showConnections, setShowConnections] = useState(false);
 
   useEffect(() => {
@@ -166,7 +169,7 @@ export function Dashboard({ connectionState }: DashboardProps) {
     }
 
     function onProbeMethod(method: ProbeMethod) {
-      setProbeMethod(method);
+      onProbeMethodChange(method);
     }
 
     function onTrackedContacts(contacts: { id: string; platform: Platform }[]) {
@@ -221,7 +224,7 @@ export function Dashboard({ connectionState }: DashboardProps) {
       socket.off("probe-method", onProbeMethod);
       socket.off("tracked-contacts", onTrackedContacts);
     };
-  }, []);
+  }, [onProbeMethodChange]);
 
   const handleAdd = () => {
     if (!inputNumber) return;
@@ -235,158 +238,133 @@ export function Dashboard({ connectionState }: DashboardProps) {
     socket.emit("remove-contact", jid);
   };
 
-  const handleProbeMethodChange = (method: ProbeMethod) => {
-    socket.emit("set-probe-method", method);
-  };
-
   return (
-    <div className="space-y-6">
-      {/* Add Contact Form */}
-      <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-        <div className="flex justify-between items-center mb-4">
-          <div className="flex items-center gap-4">
-            <h2 className="text-xl font-semibold text-gray-900">
-              Track Contacts
-            </h2>
-            {/* Manage Connections button */}
-            <button
-              onClick={() => setShowConnections(!showConnections)}
-              className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-colors flex items-center gap-1 ${
-                showConnections
-                  ? "bg-gray-700 text-white"
-                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-              }`}
-            >
-              <Settings size={14} />
-              {showConnections ? "Hide Connections" : "Manage Connections"}
-            </button>
+    <div className="space-y-8 pb-20">
+      {/* Error Toast */}
+      {error && (
+        <div className="fixed top-24 right-8 z-50 animate-in slide-in-from-right duration-300">
+          <div className="bg-red-500 text-white px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-3 border border-red-400/50">
+            <AlertCircle size={20} />
+            <span className="font-bold">{error}</span>
           </div>
-          <div className="flex items-center gap-4">
-            {/* Probe Method Toggle */}
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-gray-600">Probe Method:</span>
-              <div className="flex rounded-lg overflow-hidden border border-gray-300">
+        </div>
+      )}
+
+      {/* Control Panel */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        {/* Add Contact Form */}
+        <div className="lg:col-span-8 bg-[#16161a] p-6 rounded-2xl border border-slate-800 shadow-xl">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-10 h-10 bg-indigo-500/10 rounded-xl flex items-center justify-center">
+              <Plus className="text-indigo-500" size={24} />
+            </div>
+            <h2 className="text-xl font-black text-white uppercase tracking-tight">Target Acquisition</h2>
+          </div>
+
+          <div className="flex flex-col md:flex-row gap-4">
+            <div className="flex-1 flex bg-[#0a0a0c] rounded-xl border border-slate-800 p-1 focus-within:border-indigo-500/50 transition-all">
+              <div className="flex p-1 gap-1">
                 <button
-                  onClick={() => handleProbeMethodChange("delete")}
-                  className={`px-3 py-1.5 text-sm font-medium transition-all duration-200 flex items-center gap-1 ${
-                    probeMethod === "delete"
-                      ? "bg-purple-600 text-white"
-                      : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                  onClick={() => setSelectedPlatform("whatsapp")}
+                  className={`px-4 py-2 rounded-lg text-xs font-black transition-all flex items-center gap-2 ${
+                    selectedPlatform === "whatsapp"
+                      ? "bg-green-500/10 text-green-500 border border-green-500/30"
+                      : "text-slate-500 hover:text-slate-300"
                   }`}
-                  title="Silent Delete Probe - Completely covert, target sees nothing"
                 >
-                  <Trash2 size={14} />
-                  Delete
+                  <MessageCircle size={14} />
+                  WA
                 </button>
                 <button
-                  onClick={() => handleProbeMethodChange("reaction")}
-                  className={`px-3 py-1.5 text-sm font-medium transition-all duration-200 flex items-center gap-1 ${
-                    probeMethod === "reaction"
-                      ? "bg-yellow-500 text-white"
-                      : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                  onClick={() => setSelectedPlatform("signal")}
+                  className={`px-4 py-2 rounded-lg text-xs font-black transition-all flex items-center gap-2 ${
+                    selectedPlatform === "signal"
+                      ? "bg-blue-500/10 text-blue-500 border border-blue-500/30"
+                      : "text-slate-500 hover:text-slate-300"
                   }`}
-                  title="Reaction Probe - Sends reactions to non-existent messages"
                 >
-                  <Zap size={14} />
-                  Reaction
+                  <Search size={14} />
+                  SIG
+                </button>
+              </div>
+              <input
+                type="text"
+                value={inputNumber}
+                onChange={(e) => setInputNumber(e.target.value)}
+                placeholder="Target Phone Number (e.g. 9715...)"
+                className="flex-1 bg-transparent border-none focus:ring-0 text-white placeholder-slate-600 px-4 font-bold"
+                onKeyDown={(e) => e.key === "Enter" && handleAdd()}
+              />
+            </div>
+            <button
+              onClick={handleAdd}
+              className="bg-indigo-600 hover:bg-indigo-500 text-white px-8 py-3 rounded-xl font-black transition-all shadow-lg shadow-indigo-600/20 flex items-center justify-center gap-2 uppercase text-sm tracking-widest"
+            >
+              Start Probe
+            </button>
+          </div>
+        </div>
+
+        {/* System Settings */}
+        <div className="lg:col-span-4 bg-[#16161a] p-6 rounded-2xl border border-slate-800 shadow-xl">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-10 h-10 bg-indigo-500/10 rounded-xl flex items-center justify-center">
+              <Settings className="text-indigo-500" size={24} />
+            </div>
+            <h2 className="text-xl font-black text-white uppercase tracking-tight">Logic</h2>
+          </div>
+
+          <div className="space-y-4">
+            <div className="flex items-center justify-between p-3 bg-[#0a0a0c] rounded-xl border border-slate-800">
+              <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Method</span>
+              <div className="flex bg-black/40 p-1 rounded-lg border border-slate-800">
+                <button
+                  onClick={() => onProbeMethodChange("delete")}
+                  className={`px-3 py-1.5 rounded-md text-[10px] font-black transition-all ${
+                    probeMethod === "delete" ? "bg-purple-600 text-white shadow-lg" : "text-slate-600 hover:text-slate-400"
+                  }`}
+                >
+                  DELETE
+                </button>
+                <button
+                  onClick={() => onProbeMethodChange("reaction")}
+                  className={`px-3 py-1.5 rounded-md text-[10px] font-black transition-all ${
+                    probeMethod === "reaction" ? "bg-yellow-600 text-white shadow-lg" : "text-slate-600 hover:text-slate-400"
+                  }`}
+                >
+                  REACTION
                 </button>
               </div>
             </div>
-            {/* Privacy Mode Toggle */}
+
             <button
-              onClick={() => setPrivacyMode(!privacyMode)}
-              className={`px-4 py-2 rounded-lg flex items-center gap-2 font-medium transition-all duration-200 ${
-                privacyMode
-                  ? "bg-green-600 text-white hover:bg-green-700 shadow-md"
-                  : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+              onClick={() => setShowConnections(!showConnections)}
+              className={`w-full py-3 rounded-xl font-bold text-[11px] uppercase tracking-widest border transition-all flex items-center justify-center gap-2 ${
+                showConnections ? "bg-slate-800 border-slate-700 text-white" : "bg-transparent border-slate-800 text-slate-500 hover:border-slate-700 hover:text-slate-300"
               }`}
-              title={
-                privacyMode
-                  ? "Privacy Mode: ON (Click to disable)"
-                  : "Privacy Mode: OFF (Click to enable)"
-              }
             >
-              {privacyMode ? (
-                <>
-                  <EyeOff size={20} />
-                  <span>Privacy ON</span>
-                </>
-              ) : (
-                <>
-                  <Eye size={20} />
-                  <span>Privacy OFF</span>
-                </>
-              )}
+              <Settings size={14} />
+              {showConnections ? "Hide Internal" : "Manage Internal"}
             </button>
           </div>
         </div>
-        <div className="flex gap-4">
-          {/* Platform Selector */}
-          <div className="flex rounded-lg overflow-hidden border border-gray-300">
-            <button
-              onClick={() => setSelectedPlatform("whatsapp")}
-              disabled={!connectionState.whatsapp}
-              className={`px-4 py-2 text-sm font-medium transition-all duration-200 flex items-center gap-2 ${
-                selectedPlatform === "whatsapp"
-                  ? "bg-green-600 text-white"
-                  : connectionState.whatsapp
-                  ? "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                  : "bg-gray-100 text-gray-400 cursor-not-allowed"
-              }`}
-              title={
-                connectionState.whatsapp ? "WhatsApp" : "WhatsApp not connected"
-              }
-            >
-              <MessageCircle size={16} />
-              WhatsApp
-            </button>
-            <button
-              onClick={() => setSelectedPlatform("signal")}
-              disabled={!connectionState.signal}
-              className={`px-4 py-2 text-sm font-medium transition-all duration-200 flex items-center gap-2 ${
-                selectedPlatform === "signal"
-                  ? "bg-blue-600 text-white"
-                  : connectionState.signal
-                  ? "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                  : "bg-gray-100 text-gray-400 cursor-not-allowed"
-              }`}
-              title={connectionState.signal ? "Signal" : "Signal not connected"}
-            >
-              <MessageCircle size={16} />
-              Signal
-            </button>
-          </div>
-          <input
-            type="text"
-            placeholder="Enter phone number (e.g. 491701234567)"
-            className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-            value={inputNumber}
-            onChange={(e) => setInputNumber(e.target.value)}
-            onKeyPress={(e) => e.key === "Enter" && handleAdd()}
-          />
-          <button
-            onClick={handleAdd}
-            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2 font-medium transition-colors"
-          >
-            <Plus size={20} /> Add Contact
-          </button>
-        </div>
-        {error && <p className="mt-2 text-red-500 text-sm">{error}</p>}
       </div>
 
       {/* Connections Panel */}
-      {showConnections && <Login connectionState={connectionState} />}
+      {showConnections && (
+        <div className="animate-in zoom-in-95 fade-in duration-300">
+          <Login connectionState={connectionState} />
+        </div>
+      )}
 
       {/* Contact Cards */}
       {contacts.size === 0 ? (
-        <div className="bg-gray-50 border-2 border-dashed border-gray-300 rounded-xl p-12 text-center">
-          <p className="text-gray-500 text-lg">No contacts being tracked</p>
-          <p className="text-gray-400 text-sm mt-2">
-            Add a contact above to start tracking
-          </p>
+        <div className="flex flex-col items-center justify-center py-32 opacity-20 filter grayscale">
+          <Shield size={80} className="text-slate-400 mb-6" />
+          <p className="text-xl font-black text-slate-400 uppercase tracking-widest">System Idle</p>
         </div>
       ) : (
-        <div className="space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {Array.from(contacts.values()).map((contact) => (
             <ContactCard
               key={contact.jid}

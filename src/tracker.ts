@@ -5,6 +5,7 @@ import { readdir, readFile, appendFile, mkdir } from "fs/promises";
 import { watch, FSWatcher } from "fs";
 import path from "path";
 import { classifyDeviceOS } from "./semantic-os-classifier.js";
+import { historyManager } from "./history-manager.js";
 
 // Suppress Baileys debug output (Closing session spam)
 const logger = pino({
@@ -827,11 +828,22 @@ export class WhatsAppTracker {
         lastRtt: timeout,
         lastUpdate: Date.now(),
       });
+      historyManager.logEvent("status_change", jid, "whatsapp", {
+        state: "OFFLINE",
+        rtt: timeout,
+      });
     } else {
       const metrics = this.deviceMetrics.get(jid)!;
+      const oldState = metrics.state;
       metrics.state = "OFFLINE";
       metrics.lastRtt = timeout;
       metrics.lastUpdate = Date.now();
+      if (oldState !== "OFFLINE") {
+        historyManager.logEvent("status_change", jid, "whatsapp", {
+          state: "OFFLINE",
+          rtt: timeout,
+        });
+      }
     }
 
     trackerLogger.info(
@@ -932,13 +944,32 @@ export class WhatsAppTracker {
 
       threshold = median * 0.9;
 
+      const oldState = metrics.state;
       if (movingAvg < threshold) {
         metrics.state = "Online";
       } else {
         metrics.state = "Standby";
       }
+
+      if (oldState !== metrics.state) {
+        historyManager.logEvent("status_change", jid, "whatsapp", {
+          state: metrics.state,
+          rtt: metrics.lastRtt,
+          avg: movingAvg,
+          threshold,
+        });
+      }
     } else {
       metrics.state = "Calibrating...";
+    }
+
+    // Periodically log RTT samples for detailed history
+    if (metrics.rttHistory.length % 5 === 0) {
+      historyManager.logEvent("rtt_sample", jid, "whatsapp", {
+        rtt: metrics.lastRtt,
+        avg: movingAvg,
+        state: metrics.state,
+      });
     }
 
     // Normal mode: Formatted output
