@@ -250,9 +250,12 @@ export function extractSessionFeatures(sessionFile: string): {
 
     // Support both '_sessions' (Baileys) and 'sessions' or flat-style files
     const sessionsRaw =
-      (obj && typeof obj === "object" && Array.isArray(obj.sessions))
+      obj && typeof obj === "object" && Array.isArray(obj.sessions)
         ? obj.sessions
-        : obj && typeof obj === "object" && obj._sessions && typeof obj._sessions === "object"
+        : obj &&
+          typeof obj === "object" &&
+          obj._sessions &&
+          typeof obj._sessions === "object"
         ? Object.values(obj._sessions)
         : Object.values(obj).filter((v: any) => v && typeof v === "object");
 
@@ -269,14 +272,19 @@ export function extractSessionFeatures(sessionFile: string): {
 
       if (sess?.indexInfo && typeof sess.indexInfo === "object") {
         if (sess.indexInfo.closed === -1) activeSessions += 1;
-        const ppk = sess.pendingPreKey || (sess.indexInfo && sess.indexInfo.preKeyId) || 0;
+        const ppk =
+          sess.pendingPreKey ||
+          (sess.indexInfo && sess.indexInfo.preKeyId) ||
+          0;
         if (typeof ppk === "number") pendingPreKeyTotal += ppk;
       }
     }
 
     const sessionCount = sessions.length;
     const maxChains = chainCounts.length ? Math.max(...chainCounts) : 0;
-    const avgChains = chainCounts.length ? chainCounts.reduce((a, b) => a + b, 0) / chainCounts.length : 0;
+    const avgChains = chainCounts.length
+      ? chainCounts.reduce((a, b) => a + b, 0) / chainCounts.length
+      : 0;
     const multiChainSessions = chainCounts.filter((n) => n >= 2).length;
 
     return {

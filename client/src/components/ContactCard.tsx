@@ -202,13 +202,11 @@ export function ContactCard({
 
                     // Determine color based on confidence
                     const getConfidenceColor = (conf?: number) => {
-                      if (conf === undefined) return "bg-gray-100 text-gray-700";
-                      if (conf >= 0.9)
-                        return "bg-green-100 text-green-700"; // Excellent
-                      if (conf >= 0.75)
-                        return "bg-blue-100 text-blue-700"; // Good
-                      if (conf >= 0.6)
-                        return "bg-yellow-100 text-yellow-700"; // Fair
+                      if (conf === undefined)
+                        return "bg-gray-100 text-gray-700";
+                      if (conf >= 0.9) return "bg-green-100 text-green-700"; // Excellent
+                      if (conf >= 0.75) return "bg-blue-100 text-blue-700"; // Good
+                      if (conf >= 0.6) return "bg-yellow-100 text-yellow-700"; // Fair
                       return "bg-orange-100 text-orange-700"; // Low
                     };
 
@@ -232,7 +230,9 @@ export function ContactCard({
                                   className={`text-xs px-2 py-0.5 rounded font-medium ${getConfidenceColor(
                                     confidence
                                   )}`}
-                                  title={`Confidence: ${(confidence * 100).toFixed(1)}%`}
+                                  title={`Confidence: ${(
+                                    confidence * 100
+                                  ).toFixed(1)}%`}
                                 >
                                   {(confidence * 100).toFixed(0)}%
                                 </span>

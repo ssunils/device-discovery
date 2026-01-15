@@ -10,7 +10,8 @@ import path from "path";
 async function testMLDetector() {
   console.log("🧪 Testing ML Detector Integration\n");
 
-  const testDir = "/Users/user/DEV/remote-device-activity/device-activity-tracker";
+  const testDir =
+    "/Users/user/DEV/remote-device-activity/device-activity-tracker";
   const sessionFile = path.join(
     testDir,
     "auth_info_baileys",
@@ -21,7 +22,10 @@ async function testMLDetector() {
   console.log(`🔍 Testing ML detection...\n`);
 
   try {
-    const result = await detectOSWithML("919555067836@s.whatsapp.net", sessionFile);
+    const result = await detectOSWithML(
+      "919555067836@s.whatsapp.net",
+      sessionFile
+    );
 
     console.log("✅ ML Detection Result:");
     console.log(`   OS Type: ${result.osType}`);

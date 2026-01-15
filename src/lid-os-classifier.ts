@@ -1,18 +1,18 @@
 /**
  * iOS & Android Device Classifier
  * Based on WhatsApp LID (Local Identifier) prefix patterns
- * 
+ *
  * Accuracy: 100% (verified on 9 devices)
  * Method: LID prefix matching (first 2 digits)
  */
 
-import { readFileSync } from 'fs';
-import path from 'path';
+import { readFileSync } from "fs";
+import path from "path";
 
 export interface DeviceClassification {
-  osType: 'iOS' | 'Android' | 'Unknown';
+  osType: "iOS" | "Android" | "Unknown";
   confidence: number;
-  method: 'lid_prefix_matching';
+  method: "lid_prefix_matching";
   lid?: string;
   prefix?: string;
 }
@@ -21,21 +21,21 @@ export interface DeviceClassification {
  * LID Prefix patterns discovered through ground truth analysis
  */
 const LID_PREFIX_PATTERNS = {
-  ios: ['12', '15', '26', '27'],
-  android: ['21', '22', '86', '99'],
+  ios: ["12", "15", "26", "27"],
+  android: ["21", "22", "86", "99"],
 };
 
 const CONFIDENCE_MAP: Record<string, number> = {
   // iOS prefixes
-  '12': 0.99,
-  '15': 0.99,
-  '26': 0.98,
-  '27': 0.98,
+  "12": 0.99,
+  "15": 0.99,
+  "26": 0.98,
+  "27": 0.98,
   // Android prefixes
-  '21': 0.98,
-  '22': 0.98,
-  '86': 0.99,
-  '99': 0.99,
+  "21": 0.98,
+  "22": 0.98,
+  "86": 0.99,
+  "99": 0.99,
 };
 
 /**
@@ -47,7 +47,7 @@ const CONFIDENCE_MAP: Record<string, number> = {
 export function extractLID(phone: string, sessionDir: string): string | null {
   try {
     const lidFile = path.join(sessionDir, `lid-mapping-${phone}.json`);
-    const content = readFileSync(lidFile, 'utf-8');
+    const content = readFileSync(lidFile, "utf-8");
     // Content is a JSON string, e.g., "128977985368108"
     return JSON.parse(content);
   } catch {
@@ -63,9 +63,9 @@ export function extractLID(phone: string, sessionDir: string): string | null {
 export function classifyByLIDPrefix(lid: string): DeviceClassification {
   if (!lid || lid.length < 2) {
     return {
-      osType: 'Unknown',
+      osType: "Unknown",
       confidence: 0,
-      method: 'lid_prefix_matching',
+      method: "lid_prefix_matching",
       lid,
     };
   }
@@ -74,9 +74,9 @@ export function classifyByLIDPrefix(lid: string): DeviceClassification {
 
   if (LID_PREFIX_PATTERNS.ios.includes(prefix)) {
     return {
-      osType: 'iOS',
+      osType: "iOS",
       confidence: CONFIDENCE_MAP[prefix] || 0.95,
-      method: 'lid_prefix_matching',
+      method: "lid_prefix_matching",
       lid,
       prefix,
     };
@@ -84,9 +84,9 @@ export function classifyByLIDPrefix(lid: string): DeviceClassification {
 
   if (LID_PREFIX_PATTERNS.android.includes(prefix)) {
     return {
-      osType: 'Android',
+      osType: "Android",
       confidence: CONFIDENCE_MAP[prefix] || 0.95,
-      method: 'lid_prefix_matching',
+      method: "lid_prefix_matching",
       lid,
       prefix,
     };
@@ -94,9 +94,9 @@ export function classifyByLIDPrefix(lid: string): DeviceClassification {
 
   // Unknown prefix
   return {
-    osType: 'Unknown',
+    osType: "Unknown",
     confidence: 0,
-    method: 'lid_prefix_matching',
+    method: "lid_prefix_matching",
     lid,
     prefix,
   };
@@ -116,9 +116,9 @@ export function classifyDeviceOS(
 
   if (!lid) {
     return {
-      osType: 'Unknown',
+      osType: "Unknown",
       confidence: 0,
-      method: 'lid_prefix_matching',
+      method: "lid_prefix_matching",
     };
   }
 

@@ -175,7 +175,12 @@ export class WhatsAppTracker {
     chainCount?: number;
     source?: string;
     registrationId?: number;
-    method?: "tensorflow_ml" | "heuristic" | "unknown" | "semantic_fingerprinting" | "ignored";
+    method?:
+      | "tensorflow_ml"
+      | "heuristic"
+      | "unknown"
+      | "semantic_fingerprinting"
+      | "ignored";
     signals?: any;
   } | null = null; // Detailed detection info
   private osDetectionAttempts: number = 0;
@@ -226,7 +231,9 @@ export class WhatsAppTracker {
             method: "ignored",
           };
 
-          trackerLogger.info(`📱 Device ${userId} is on the ignored list; skipping OS detection`);
+          trackerLogger.info(
+            `📱 Device ${userId} is on the ignored list; skipping OS detection`
+          );
           this.sendUpdate();
           return;
         }
