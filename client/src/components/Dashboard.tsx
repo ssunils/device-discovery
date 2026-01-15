@@ -47,11 +47,11 @@ interface ContactInfo {
   platform: Platform;
 }
 
-export function Dashboard({ 
-  connectionState, 
-  privacyMode, 
-  probeMethod, 
-  onProbeMethodChange 
+export function Dashboard({
+  connectionState,
+  privacyMode,
+  probeMethod,
+  onProbeMethodChange,
 }: DashboardProps) {
   const [inputNumber, setInputNumber] = useState("");
   const [selectedPlatform, setSelectedPlatform] = useState<Platform>(
@@ -258,7 +258,9 @@ export function Dashboard({
             <div className="w-10 h-10 bg-indigo-500/10 rounded-xl flex items-center justify-center">
               <Plus className="text-indigo-500" size={24} />
             </div>
-            <h2 className="text-xl font-black text-white uppercase tracking-tight">Target Acquisition</h2>
+            <h2 className="text-xl font-black text-white uppercase tracking-tight">
+              Target Acquisition
+            </h2>
           </div>
 
           <div className="flex flex-col md:flex-row gap-4">
@@ -311,17 +313,23 @@ export function Dashboard({
             <div className="w-10 h-10 bg-indigo-500/10 rounded-xl flex items-center justify-center">
               <Settings className="text-indigo-500" size={24} />
             </div>
-            <h2 className="text-xl font-black text-white uppercase tracking-tight">Logic</h2>
+            <h2 className="text-xl font-black text-white uppercase tracking-tight">
+              Logic
+            </h2>
           </div>
 
           <div className="space-y-4">
             <div className="flex items-center justify-between p-3 bg-[#0a0a0c] rounded-xl border border-slate-800">
-              <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Method</span>
+              <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">
+                Method
+              </span>
               <div className="flex bg-black/40 p-1 rounded-lg border border-slate-800">
                 <button
                   onClick={() => onProbeMethodChange("delete")}
                   className={`px-3 py-1.5 rounded-md text-[10px] font-black transition-all ${
-                    probeMethod === "delete" ? "bg-purple-600 text-white shadow-lg" : "text-slate-600 hover:text-slate-400"
+                    probeMethod === "delete"
+                      ? "bg-purple-600 text-white shadow-lg"
+                      : "text-slate-600 hover:text-slate-400"
                   }`}
                 >
                   DELETE
@@ -329,7 +337,9 @@ export function Dashboard({
                 <button
                   onClick={() => onProbeMethodChange("reaction")}
                   className={`px-3 py-1.5 rounded-md text-[10px] font-black transition-all ${
-                    probeMethod === "reaction" ? "bg-yellow-600 text-white shadow-lg" : "text-slate-600 hover:text-slate-400"
+                    probeMethod === "reaction"
+                      ? "bg-yellow-600 text-white shadow-lg"
+                      : "text-slate-600 hover:text-slate-400"
                   }`}
                 >
                   REACTION
@@ -340,7 +350,9 @@ export function Dashboard({
             <button
               onClick={() => setShowConnections(!showConnections)}
               className={`w-full py-3 rounded-xl font-bold text-[11px] uppercase tracking-widest border transition-all flex items-center justify-center gap-2 ${
-                showConnections ? "bg-slate-800 border-slate-700 text-white" : "bg-transparent border-slate-800 text-slate-500 hover:border-slate-700 hover:text-slate-300"
+                showConnections
+                  ? "bg-slate-800 border-slate-700 text-white"
+                  : "bg-transparent border-slate-800 text-slate-500 hover:border-slate-700 hover:text-slate-300"
               }`}
             >
               <Settings size={14} />
@@ -361,7 +373,9 @@ export function Dashboard({
       {contacts.size === 0 ? (
         <div className="flex flex-col items-center justify-center py-32 opacity-20 filter grayscale">
           <Shield size={80} className="text-slate-400 mb-6" />
-          <p className="text-xl font-black text-slate-400 uppercase tracking-widest">System Idle</p>
+          <p className="text-xl font-black text-slate-400 uppercase tracking-widest">
+            System Idle
+          </p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">

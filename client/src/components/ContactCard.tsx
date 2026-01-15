@@ -17,7 +17,7 @@ import {
   Zap,
   Cpu,
   Globe,
-  Apple
+  Apple,
 } from "lucide-react";
 import clsx from "clsx";
 
@@ -78,8 +78,13 @@ export function ContactCard({
     : displayNumber;
 
   const getOsIcon = (os: string) => {
-    if (os.toLowerCase().includes("android")) return <Smartphone size={14} className="text-green-500" />;
-    if (os.toLowerCase().includes("ios") || os.toLowerCase().includes("apple") || os.toLowerCase().includes("iphone")) 
+    if (os.toLowerCase().includes("android"))
+      return <Smartphone size={14} className="text-green-500" />;
+    if (
+      os.toLowerCase().includes("ios") ||
+      os.toLowerCase().includes("apple") ||
+      os.toLowerCase().includes("iphone")
+    )
       return <Apple size={14} className="text-blue-400" />;
     return <Cpu size={14} className="text-slate-400" />;
   };
@@ -89,8 +94,18 @@ export function ContactCard({
       {/* Header */}
       <div className="bg-[#1a1a20] border-b border-slate-800 px-6 py-4 flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <div className={`p-2 rounded-xl ${platform === "whatsapp" ? "bg-green-500/10 text-green-500" : "bg-blue-500/10 text-blue-500"}`}>
-            {platform === "whatsapp" ? <MessageCircle size={18} /> : <Shield size={18} />}
+          <div
+            className={`p-2 rounded-xl ${
+              platform === "whatsapp"
+                ? "bg-green-500/10 text-green-500"
+                : "bg-blue-500/10 text-blue-500"
+            }`}
+          >
+            {platform === "whatsapp" ? (
+              <MessageCircle size={18} />
+            ) : (
+              <Shield size={18} />
+            )}
           </div>
           <div>
             <div className="flex items-center gap-2">
@@ -146,9 +161,13 @@ export function ContactCard({
             </div>
 
             <div className="text-center">
-              <div className={`text-xs font-black uppercase tracking-[0.2em] mb-1 ${
-                currentStatus.includes("Online") ? "text-green-500" : "text-slate-500"
-              }`}>
+              <div
+                className={`text-xs font-black uppercase tracking-[0.2em] mb-1 ${
+                  currentStatus.includes("Online")
+                    ? "text-green-500"
+                    : "text-slate-500"
+                }`}
+              >
                 {currentStatus}
               </div>
               <div className="text-[10px] text-slate-600 font-bold uppercase tracking-widest flex items-center justify-center gap-1">
@@ -165,67 +184,93 @@ export function ContactCard({
                   <Activity size={10} /> AVG RTT
                 </div>
                 <div className="text-lg font-black text-white">
-                  {lastData?.avg.toFixed(0) || "0"}<span className="text-[10px] ml-1 text-slate-600">ms</span>
+                  {lastData?.avg.toFixed(0) || "0"}
+                  <span className="text-[10px] ml-1 text-slate-600">ms</span>
                 </div>
               </div>
               <div className="bg-[#0a0a0c] p-3 rounded-xl border border-slate-800/50">
                 <div className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1 flex items-center gap-1">
-                   MDN
+                  MDN
                 </div>
                 <div className="text-lg font-black text-white">
-                  {lastData?.median.toFixed(0) || "0"}<span className="text-[10px] ml-1 text-slate-600">ms</span>
+                  {lastData?.median.toFixed(0) || "0"}
+                  <span className="text-[10px] ml-1 text-slate-600">ms</span>
                 </div>
               </div>
               <div className="bg-[#0a0a0c] p-3 rounded-xl border border-slate-800/50">
                 <div className="text-[9px] font-black text-indigo-500 uppercase tracking-widest mb-1 flex items-center gap-1">
-                   THR
+                  THR
                 </div>
                 <div className="text-lg font-black text-indigo-400">
-                  {lastData?.threshold.toFixed(0) || "0"}<span className="text-[10px] ml-1 text-slate-600">ms</span>
+                  {lastData?.threshold.toFixed(0) || "0"}
+                  <span className="text-[10px] ml-1 text-slate-600">ms</span>
                 </div>
               </div>
             </div>
 
             {/* Device Analytics */}
             <div className="bg-[#0a0a0c] p-4 rounded-xl border border-slate-800/50">
-              <h5 className="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em] mb-3">Target Devices</h5>
+              <h5 className="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em] mb-3">
+                Target Devices
+              </h5>
               <div className="space-y-2">
-                {devices.length > 0 ? devices.map((device, idx) => {
-                  let osType = "Unknown";
-                  let confidence: number | undefined;
-                  if (typeof device.os === "string") osType = device.os;
-                  else if (typeof device.os === "object" && device.os?.detectedOS) {
-                    osType = device.os.detectedOS;
-                    confidence = device.os.confidence;
-                  }
+                {devices.length > 0 ? (
+                  devices.map((device, idx) => {
+                    let osType = "Unknown";
+                    let confidence: number | undefined;
+                    if (typeof device.os === "string") osType = device.os;
+                    else if (
+                      typeof device.os === "object" &&
+                      device.os?.detectedOS
+                    ) {
+                      osType = device.os.detectedOS;
+                      confidence = device.os.confidence;
+                    }
 
-                  return (
-                    <div key={device.jid} className="flex items-center justify-between p-2 rounded-lg bg-black/20 border border-slate-800/30">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-lg bg-slate-900 border border-slate-800 flex items-center justify-center">
-                          {getOsIcon(osType)}
-                        </div>
-                        <div>
-                          <p className="text-[11px] font-black text-white uppercase tracking-tight">{osType}</p>
-                          {confidence !== undefined && (
-                            <div className="flex items-center gap-2 mt-0.5">
-                              <div className="w-12 h-1 bg-slate-800 rounded-full overflow-hidden">
-                                <div className="h-full bg-indigo-500" style={{ width: `${confidence * 100}%` }} />
+                    return (
+                      <div
+                        key={device.jid}
+                        className="flex items-center justify-between p-2 rounded-lg bg-black/20 border border-slate-800/30"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-lg bg-slate-900 border border-slate-800 flex items-center justify-center">
+                            {getOsIcon(osType)}
+                          </div>
+                          <div>
+                            <p className="text-[11px] font-black text-white uppercase tracking-tight">
+                              {osType}
+                            </p>
+                            {confidence !== undefined && (
+                              <div className="flex items-center gap-2 mt-0.5">
+                                <div className="w-12 h-1 bg-slate-800 rounded-full overflow-hidden">
+                                  <div
+                                    className="h-full bg-indigo-500"
+                                    style={{ width: `${confidence * 100}%` }}
+                                  />
+                                </div>
+                                <span className="text-[8px] font-black text-slate-500">
+                                  {(confidence * 100).toFixed(0)}%
+                                </span>
                               </div>
-                              <span className="text-[8px] font-black text-slate-500">{(confidence * 100).toFixed(0)}%</span>
-                            </div>
-                          )}
+                            )}
+                          </div>
                         </div>
+                        <span
+                          className={`text-[10px] font-black px-2 py-0.5 rounded cursor-default ${
+                            device.state.includes("Online")
+                              ? "bg-green-500/10 text-green-500"
+                              : "bg-slate-800 text-slate-500"
+                          }`}
+                        >
+                          {device.state}
+                        </span>
                       </div>
-                      <span className={`text-[10px] font-black px-2 py-0.5 rounded cursor-default ${
-                        device.state.includes("Online") ? "bg-green-500/10 text-green-500" : "bg-slate-800 text-slate-500"
-                      }`}>
-                        {device.state}
-                      </span>
-                    </div>
-                  );
-                }) : (
-                   <div className="text-center py-2 text-[10px] font-black text-slate-700 uppercase tracking-widest">No Active Nodes</div>
+                    );
+                  })
+                ) : (
+                  <div className="text-center py-2 text-[10px] font-black text-slate-700 uppercase tracking-widest">
+                    No Active Nodes
+                  </div>
                 )}
               </div>
             </div>
@@ -241,11 +286,21 @@ export function ContactCard({
           </div>
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={data}>
-              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#1e293b" strokeOpacity={0.2} />
+              <CartesianGrid
+                strokeDasharray="3 3"
+                vertical={false}
+                stroke="#1e293b"
+                strokeOpacity={0.2}
+              />
               <XAxis dataKey="timestamp" hide />
               <YAxis domain={["auto", "auto"]} hide />
               <Tooltip
-                contentStyle={{ backgroundColor: "#0f172a", border: "1px solid #334155", borderRadius: "12px", fontSize: "10px" }}
+                contentStyle={{
+                  backgroundColor: "#0f172a",
+                  border: "1px solid #334155",
+                  borderRadius: "12px",
+                  fontSize: "10px",
+                }}
                 itemStyle={{ color: "#94a3b8", fontWeight: "bold" }}
                 labelStyle={{ display: "none" }}
               />

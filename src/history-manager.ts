@@ -67,13 +67,13 @@ class HistoryManager {
       platform,
       data,
     };
-    
+
     // Limit history size to prevent file bloat (e.g., last 5000 events)
     this.events.push(event);
     if (this.events.length > 5000) {
       this.events = this.events.slice(-5000);
     }
-    
+
     await this.save();
   }
 
