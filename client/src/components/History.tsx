@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { socket } from "../App";
+import { getSocket } from "../App";
 import { History as HistoryIcon, Clock, Trash2, ArrowLeft } from "lucide-react";
 import clsx from "clsx";
 import { formatPhoneNumber } from "../utils/phone";
@@ -117,27 +117,33 @@ export function History({ onBack }: HistoryProps) {
   };
 
   useEffect(() => {
-    socket.emit("get-history");
+    const sock = getSocket();
+    if (!sock) return;
 
-    socket.on("history-data", (data: HistoryEvent[]) => {
+    sock.emit("get-history");
+
+    sock.on("history-data", (data: HistoryEvent[]) => {
       const ordered = [...data].reverse();
       setEvents(ordered);
     });
 
-    socket.on("history-cleared", () => {
+    sock.on("history-cleared", () => {
       setEvents([]);
       setSelectedNumber(null);
     });
 
     return () => {
-      socket.off("history-data");
-      socket.off("history-cleared");
+      sock.off("history-data");
+      sock.off("history-cleared");
     };
   }, []);
 
   const clearHistory = () => {
     if (window.confirm("Are you sure you want to clear all history?")) {
-      socket.emit("clear-history");
+      const sock = getSocket();
+      if (sock) {
+        sock.emit("clear-history");
+      }
     }
   };
 

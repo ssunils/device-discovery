@@ -28,12 +28,28 @@ import { imageManager } from "./image-manager.js";
 
 // Configuration
 const SIGNAL_API_URL = process.env.SIGNAL_API_URL || "http://localhost:8080";
+const AUTH_USERNAME = process.env.AUTH_USERNAME || "admin";
+const AUTH_PASSWORD = process.env.AUTH_PASSWORD || "tracker123";
 
 const app = express();
 app.use(cors());
+app.use(express.json());
 
 // Serve static images
 app.use("/images", express.static("data/images"));
+
+// Simple authentication endpoint
+app.post("/auth/login", (req, res) => {
+  const { username, password } = req.body;
+
+  if (username === AUTH_USERNAME && password === AUTH_PASSWORD) {
+    // Generate a simple token
+    const token = Buffer.from(`${username}:${Date.now()}`).toString("base64");
+    res.json({ success: true, token });
+  } else {
+    res.status(401).json({ success: false, error: "Invalid credentials" });
+  }
+});
 
 const httpServer = createServer(app);
 const io = new Server(httpServer, {
@@ -41,6 +57,19 @@ const io = new Server(httpServer, {
     origin: "*", // Allow all origins for dev
     methods: ["GET", "POST"],
   },
+});
+
+// Add authentication middleware
+io.use((socket: any, next: any) => {
+  const token = socket.handshake.auth.token;
+  if (!token) {
+    return next(new Error("Authentication error"));
+  }
+  // Verify token format (basic check)
+  if (typeof token === "string" && token.length > 0) {
+    return next();
+  }
+  next(new Error("Invalid token"));
 });
 
 let sock: any;

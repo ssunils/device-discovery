@@ -8,13 +8,22 @@ import {
   Signal as SignalIcon,
   LogOut,
 } from "lucide-react";
+import { AuthLogin } from "./components/AuthLogin";
 import { Login } from "./components/Login";
 import { Dashboard } from "./components/Dashboard";
 import { History } from "./components/History";
 
 // Create socket with autoConnect disabled so we can add listeners before connecting
 const API_URL = process.env.REACT_APP_API_URL || "http://localhost:3001";
-export const socket: Socket = io(API_URL, { autoConnect: false });
+let socket: Socket | null = null;
+
+export function getSocket(): Socket | null {
+  return socket;
+}
+
+export function setSocket(s: Socket | null) {
+  socket = s;
+}
 
 export type Platform = "whatsapp" | "signal";
 export type ProbeMethod = "delete" | "reaction";
@@ -29,7 +38,8 @@ export interface ConnectionState {
 }
 
 function App() {
-  const [isConnected, setIsConnected] = useState(socket.connected);
+  const [isConnected, setIsConnected] = useState(socket?.connected || false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [view, setView] = useState<"dashboard" | "history">("dashboard");
   const [privacyMode, setPrivacyMode] = useState(false);
   const [probeMethod, setProbeMethod] = useState<ProbeMethod>("reaction");
@@ -44,7 +54,35 @@ function App() {
 
   const isAnyPlatformReady = connectionState.whatsapp;
 
-  useEffect(() => {
+  const handleLogin = (token: string) => {
+    setIsAuthenticated(true);
+    // Initialize socket after authentication
+    const newSocket = io(API_URL, { autoConnect: false, auth: { token } });
+    setSocket(newSocket);
+    setupSocketListeners(newSocket);
+    if (!newSocket.connected) {
+      newSocket.connect();
+    }
+  };
+
+  const handleLogout = () => {
+    setIsAuthenticated(false);
+    if (socket) {
+      socket.disconnect();
+      setSocket(null);
+    }
+    setIsConnected(false);
+    setConnectionState({
+      whatsapp: false,
+      signal: false,
+      signalNumber: null,
+      signalApiAvailable: false,
+      signalQrImage: null,
+      whatsappQr: null,
+    });
+  };
+
+  function setupSocketListeners(sock: Socket) {
     function onConnect() {
       setIsConnected(true);
     }
@@ -111,33 +149,45 @@ function App() {
       }));
     }
 
-    socket.on("connect", onConnect);
-    socket.on("disconnect", onDisconnect);
-    socket.on("qr", onWhatsAppQr);
-    socket.on("connection-open", onWhatsAppConnectionOpen);
-    socket.on("signal-connection-open", onSignalConnectionOpen);
-    socket.on("signal-disconnected", onSignalDisconnected);
-    socket.on("signal-api-status", onSignalApiStatus);
-    socket.on("signal-qr-image", onSignalQrImage);
-    socket.on("whatsapp-logged-out", onWhatsAppLoggedOut);
+    sock.on("connect", onConnect);
+    sock.on("disconnect", onDisconnect);
+    sock.on("qr", onWhatsAppQr);
+    sock.on("connection-open", onWhatsAppConnectionOpen);
+    sock.on("signal-connection-open", onSignalConnectionOpen);
+    sock.on("signal-disconnected", onSignalDisconnected);
+    sock.on("signal-api-status", onSignalApiStatus);
+    sock.on("signal-qr-image", onSignalQrImage);
+    sock.on("whatsapp-logged-out", onWhatsAppLoggedOut);
+  }
 
-    // Now connect after listeners are set up
-    if (!socket.connected) {
-      socket.connect();
+  useEffect(() => {
+    if (isAuthenticated && socket) {
+      setupSocketListeners(socket);
+      if (!socket.connected) {
+        socket.connect();
+      }
+
+      return () => {
+        // Cleanup listeners
+        if (socket) {
+          socket.off("connect");
+          socket.off("disconnect");
+          socket.off("qr");
+          socket.off("connection-open");
+          socket.off("signal-connection-open");
+          socket.off("signal-disconnected");
+          socket.off("signal-api-status");
+          socket.off("signal-qr-image");
+          socket.off("whatsapp-logged-out");
+        }
+      };
     }
+  }, [isAuthenticated]);
 
-    return () => {
-      socket.off("connect", onConnect);
-      socket.off("disconnect", onDisconnect);
-      socket.off("qr", onWhatsAppQr);
-      socket.off("connection-open", onWhatsAppConnectionOpen);
-      socket.off("signal-connection-open", onSignalConnectionOpen);
-      socket.off("signal-disconnected", onSignalDisconnected);
-      socket.off("signal-api-status", onSignalApiStatus);
-      socket.off("signal-qr-image", onSignalQrImage);
-      socket.off("whatsapp-logged-out", onWhatsAppLoggedOut);
-    };
-  }, []);
+  // Show auth login if not authenticated
+  if (!isAuthenticated) {
+    return <AuthLogin onLogin={handleLogin} apiUrl={API_URL} />;
+  }
 
   return (
     <div className="min-h-screen bg-[#0a0a0c] text-slate-200">
@@ -210,7 +260,10 @@ function App() {
 
             {connectionState.whatsapp && (
               <button
-                onClick={() => socket.emit("logout-whatsapp")}
+                onClick={() => {
+                  const sock = getSocket();
+                  if (sock) sock.emit("logout-whatsapp");
+                }}
                 className="p-2.5 rounded-xl border bg-amber-500/10 border-amber-500/50 text-amber-500 hover:text-amber-400 transition-all"
                 title="Logout from WhatsApp"
               >
@@ -258,6 +311,15 @@ function App() {
               </div>
             </div>
           </div>
+
+          {/* App Logout Button */}
+          <button
+            onClick={handleLogout}
+            className="p-2.5 rounded-xl border bg-red-500/10 border-red-500/50 text-red-500 hover:text-red-400 transition-all"
+            title="Logout from Application"
+          >
+            <LogOut size={20} />
+          </button>
         </header>
 
         <main className="animate-in fade-in duration-500">

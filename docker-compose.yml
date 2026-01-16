@@ -27,6 +27,7 @@ services:
       args:
         - PORT=${CLIENT_PORT:-3000}
         - REACT_APP_API_URL=${BACKEND_URL:-http://localhost:3001}
+        - REACT_APP_BACKEND_URL=${BACKEND_URL:-http://localhost:3001}
     ports:
       - "${CLIENT_PORT:-3000}:${CLIENT_PORT:-3000}"
     environment:

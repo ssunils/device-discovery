@@ -6,7 +6,7 @@ import {
   AlertCircle,
   Shield,
 } from "lucide-react";
-import { socket, Platform, ConnectionState, ProbeMethod } from "../App";
+import { getSocket, Platform, ConnectionState, ProbeMethod } from "../App";
 import { ContactCard } from "./ContactCard";
 import { getImageUrl } from "../utils/imageUrl";
 import { Login } from "./Login";
@@ -228,54 +228,69 @@ export function Dashboard({
       });
     }
 
-    socket.on("tracker-update", onTrackerUpdate);
-    socket.on("profile-pic", onProfilePic);
-    socket.on("contact-name", onContactName);
-    socket.on("contact-added", onContactAdded);
-    socket.on("contact-removed", onContactRemoved);
-    socket.on("contact-paused", onContactPaused);
-    socket.on("contact-resumed", onContactResumed);
-    socket.on("error", onError);
-    socket.on("probe-method", onProbeMethod);
-    socket.on("tracked-contacts", onTrackedContacts);
+    const sock = getSocket();
+    if (!sock) return;
+
+    sock.on("tracker-update", onTrackerUpdate);
+    sock.on("profile-pic", onProfilePic);
+    sock.on("contact-name", onContactName);
+    sock.on("contact-added", onContactAdded);
+    sock.on("contact-removed", onContactRemoved);
+    sock.on("contact-paused", onContactPaused);
+    sock.on("contact-resumed", onContactResumed);
+    sock.on("error", onError);
+    sock.on("probe-method", onProbeMethod);
+    sock.on("tracked-contacts", onTrackedContacts);
 
     // Request tracked contacts after listeners are set up
-    socket.emit("get-tracked-contacts");
+    sock.emit("get-tracked-contacts");
 
     return () => {
-      socket.off("tracker-update", onTrackerUpdate);
-      socket.off("profile-pic", onProfilePic);
-      socket.off("contact-name", onContactName);
-      socket.off("contact-added", onContactAdded);
-      socket.off("contact-removed", onContactRemoved);
-      socket.off("contact-paused", onContactPaused);
-      socket.off("contact-resumed", onContactResumed);
-      socket.off("error", onError);
-      socket.off("probe-method", onProbeMethod);
-      socket.off("tracked-contacts", onTrackedContacts);
+      sock.off("tracker-update", onTrackerUpdate);
+      sock.off("profile-pic", onProfilePic);
+      sock.off("contact-name", onContactName);
+      sock.off("contact-added", onContactAdded);
+      sock.off("contact-removed", onContactRemoved);
+      sock.off("contact-paused", onContactPaused);
+      sock.off("contact-resumed", onContactResumed);
+      sock.off("error", onError);
+      sock.off("probe-method", onProbeMethod);
+      sock.off("tracked-contacts", onTrackedContacts);
     };
   }, [onProbeMethodChange]);
 
   const handleAdd = () => {
     if (!inputNumber) return;
-    socket.emit("add-contact", {
-      number: inputNumber,
-      platform: selectedPlatform,
-    });
+    const sock = getSocket();
+    if (sock) {
+      sock.emit("add-contact", {
+        number: inputNumber,
+        platform: selectedPlatform,
+      });
+    }
   };
 
   const handleRemove = (jid: string) => {
-    socket.emit("remove-contact", jid);
+    const sock = getSocket();
+    if (sock) {
+      sock.emit("remove-contact", jid);
+    }
   };
 
   const handlePause = (jid: string) => {
     console.log("[Dashboard] Emitting pause-contact for:", jid);
-    socket.emit("pause-contact", jid);
+    const sock = getSocket();
+    if (sock) {
+      sock.emit("pause-contact", jid);
+    }
   };
 
   const handleResume = (jid: string) => {
     console.log("[Dashboard] Emitting resume-contact for:", jid);
-    socket.emit("resume-contact", jid);
+    const sock = getSocket();
+    if (sock) {
+      sock.emit("resume-contact", jid);
+    }
   };
 
   return (

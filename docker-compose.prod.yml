@@ -44,6 +44,7 @@ services:
       args:
         - PORT=${CLIENT_PORT:-3000}
         - REACT_APP_API_URL=${REACT_APP_API_URL:-http://localhost:3001}
+        - REACT_APP_BACKEND_URL=${REACT_APP_BACKEND_URL:-http://localhost:3001}
     restart: unless-stopped
     ports:
       - "${CLIENT_PORT:-3000}:${CLIENT_PORT:-3000}"
