@@ -44,6 +44,7 @@ interface ContactInfo {
   presence: string | null;
   profilePic: string | null;
   platform: Platform;
+  isPaused?: boolean;
 }
 
 export function Dashboard({
@@ -147,6 +148,7 @@ export function Dashboard({
           presence: null,
           profilePic: null,
           platform: data.platform || "whatsapp",
+          isPaused: false,
         });
         return next;
       });
@@ -168,6 +170,30 @@ export function Dashboard({
 
     function onProbeMethod(method: ProbeMethod) {
       onProbeMethodChange(method);
+    }
+
+    function onContactPaused(jid: string) {
+      console.log("[Dashboard] Contact paused:", jid);
+      setContacts((prev) => {
+        const next = new Map(prev);
+        const contact = next.get(jid);
+        if (contact) {
+          next.set(jid, { ...contact, isPaused: true });
+        }
+        return next;
+      });
+    }
+
+    function onContactResumed(jid: string) {
+      console.log("[Dashboard] Contact resumed:", jid);
+      setContacts((prev) => {
+        const next = new Map(prev);
+        const contact = next.get(jid);
+        if (contact) {
+          next.set(jid, { ...contact, isPaused: false });
+        }
+        return next;
+      });
     }
 
     function onTrackedContacts(contacts: { id: string; platform: Platform }[]) {
@@ -193,6 +219,7 @@ export function Dashboard({
               presence: null,
               profilePic: null,
               platform,
+              isPaused: false,
             });
           }
         });
@@ -205,6 +232,8 @@ export function Dashboard({
     socket.on("contact-name", onContactName);
     socket.on("contact-added", onContactAdded);
     socket.on("contact-removed", onContactRemoved);
+    socket.on("contact-paused", onContactPaused);
+    socket.on("contact-resumed", onContactResumed);
     socket.on("error", onError);
     socket.on("probe-method", onProbeMethod);
     socket.on("tracked-contacts", onTrackedContacts);
@@ -218,6 +247,8 @@ export function Dashboard({
       socket.off("contact-name", onContactName);
       socket.off("contact-added", onContactAdded);
       socket.off("contact-removed", onContactRemoved);
+      socket.off("contact-paused", onContactPaused);
+      socket.off("contact-resumed", onContactResumed);
       socket.off("error", onError);
       socket.off("probe-method", onProbeMethod);
       socket.off("tracked-contacts", onTrackedContacts);
@@ -234,6 +265,16 @@ export function Dashboard({
 
   const handleRemove = (jid: string) => {
     socket.emit("remove-contact", jid);
+  };
+
+  const handlePause = (jid: string) => {
+    console.log("[Dashboard] Emitting pause-contact for:", jid);
+    socket.emit("pause-contact", jid);
+  };
+
+  const handleResume = (jid: string) => {
+    console.log("[Dashboard] Emitting resume-contact for:", jid);
+    socket.emit("resume-contact", jid);
   };
 
   return (
@@ -370,13 +411,17 @@ export function Dashboard({
             <ContactCard
               key={contact.jid}
               jid={contact.jid}
-              displayNumber={contact.contactName}
+              displayNumber={contact.displayNumber}
+              contactLabel={contact.contactName}
               data={contact.data}
               devices={contact.devices}
               deviceCount={contact.deviceCount}
               presence={contact.presence}
               profilePic={contact.profilePic}
               onRemove={() => handleRemove(contact.jid)}
+              onPause={() => handlePause(contact.jid)}
+              onResume={() => handleResume(contact.jid)}
+              isPaused={contact.isPaused || false}
               privacyMode={privacyMode}
               platform={contact.platform}
             />

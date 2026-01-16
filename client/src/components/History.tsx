@@ -1,16 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { socket } from "../App";
-import {
-  Search,
-  History as HistoryIcon,
-  User,
-  Clock,
-  Smartphone,
-  Trash2,
-  ArrowLeft,
-  Zap,
-} from "lucide-react";
+import { History as HistoryIcon, Clock, Trash2, ArrowLeft } from "lucide-react";
 import clsx from "clsx";
+import { formatPhoneNumber } from "../utils/phone";
 
 interface HistoryEvent {
   type: "search" | "status_change" | "rtt_sample";
@@ -29,12 +21,15 @@ export function History({ onBack }: HistoryProps) {
   const [filter, setFilter] = useState<"all" | "search" | "status_change">(
     "all"
   );
+  const [selectedEvent, setSelectedEvent] = useState<HistoryEvent | null>(null);
 
   useEffect(() => {
     socket.emit("get-history");
 
     socket.on("history-data", (data: HistoryEvent[]) => {
-      setEvents([...data].reverse()); // Show newest first
+      const ordered = [...data].reverse();
+      setEvents(ordered);
+      setSelectedEvent(ordered[0] || null);
     });
 
     socket.on("history-cleared", () => {
@@ -54,8 +49,91 @@ export function History({ onBack }: HistoryProps) {
   };
 
   const filteredEvents = events.filter(
-    (e) => (filter === "all" || e.type === filter) && e.platform === "whatsapp"
+    (e) => filter === "all" || e.type === filter
   );
+  useEffect(() => {
+    if (filteredEvents.length === 0) {
+      setSelectedEvent(null);
+      return;
+    }
+
+    if (
+      !selectedEvent ||
+      !filteredEvents.some(
+        (e) =>
+          e.timestamp === selectedEvent.timestamp &&
+          e.jid === selectedEvent.jid &&
+          e.type === selectedEvent.type
+      )
+    ) {
+      setSelectedEvent(filteredEvents[0]);
+    }
+  }, [filteredEvents, selectedEvent]);
+
+  const extractNumber = (event: HistoryEvent) => {
+    if (event.data?.number) return String(event.data.number);
+    if (event.platform === "signal") return event.jid.replace(/^signal:/, "");
+    return event.jid.split("@")[0];
+  };
+
+  const normalizeOs = (event: HistoryEvent) => {
+    const osValue = event.data?.os;
+    let label = "Unknown";
+    let confidence: number | undefined;
+
+    if (typeof osValue === "string") label = osValue;
+    else if (osValue && typeof osValue === "object" && osValue.detectedOS) {
+      label = osValue.detectedOS;
+      confidence = osValue.confidence;
+    }
+
+    const lower = label.toLowerCase();
+    let key: "android" | "ios" | "unknown" = "unknown";
+    if (lower.includes("android")) key = "android";
+    if (
+      lower.includes("ios") ||
+      lower.includes("apple") ||
+      lower.includes("iphone")
+    )
+      key = "ios";
+
+    const icon =
+      key === "android"
+        ? "/icons/android.svg"
+        : key === "ios"
+        ? "/icons/apple.svg"
+        : null;
+
+    return { label: label || "Unknown", icon, confidence };
+  };
+
+  const statusLabelForEvent = (event: HistoryEvent | null) => {
+    if (!event) return "Unknown";
+    if (event.data?.state) return event.data.state;
+    if (event.type === "search") return "Lookup";
+    if (event.type === "rtt_sample") return "RTT Sample";
+    return "Status Change";
+  };
+
+  const statusBadgeClasses = (label: string) => {
+    const lower = label.toLowerCase();
+    if (lower.includes("online"))
+      return "bg-green-500/10 text-green-400 border border-green-500/30";
+    if (lower.includes("standby"))
+      return "bg-amber-500/10 text-amber-400 border border-amber-500/30";
+    if (lower.includes("offline") || lower.includes("calibrating"))
+      return "bg-red-500/10 text-red-400 border border-red-500/30";
+    return "bg-slate-800 text-slate-400 border border-slate-700/60";
+  };
+
+  const selectedNumberMeta = selectedEvent
+    ? formatPhoneNumber(extractNumber(selectedEvent))
+    : null;
+  const selectedOsMeta = selectedEvent ? normalizeOs(selectedEvent) : null;
+  const selectedStatus = statusLabelForEvent(selectedEvent);
+  const selectedTimestamp = selectedEvent
+    ? new Date(selectedEvent.timestamp)
+    : null;
 
   return (
     <div className="bg-[#16161a] rounded-2xl shadow-2xl overflow-hidden border border-slate-800 flex flex-col h-[calc(100vh-220px)] animate-in fade-in zoom-in-95 duration-500">
@@ -127,7 +205,7 @@ export function History({ onBack }: HistoryProps) {
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-[#0a0a0c]/50">
+      <div className="flex-1 overflow-hidden p-6 bg-[#0a0a0c]/50">
         {filteredEvents.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-32 text-slate-800">
             <HistoryIcon className="w-20 h-20 mb-6 opacity-10" />
@@ -136,110 +214,147 @@ export function History({ onBack }: HistoryProps) {
             </p>
           </div>
         ) : (
-          filteredEvents.map((event, i) => (
-            <div
-              key={i}
-              className="group flex gap-5 p-5 rounded-2xl border border-slate-800/50 hover:border-indigo-500/30 transition-all bg-[#0a0a0c] relative overflow-hidden"
-            >
-              <div className="absolute top-0 left-0 w-1 h-full opacity-0 group-hover:opacity-100 transition-opacity bg-indigo-500" />
+          <div className="flex h-full flex-col gap-6 lg:flex-row">
+            <div className="flex-1 overflow-y-auto space-y-3 pr-1">
+              {filteredEvents.map((event, i) => {
+                const numberMeta = formatPhoneNumber(extractNumber(event));
+                const formattedNumber =
+                  numberMeta.formatted || numberMeta.raw || "Unknown";
+                const isActive =
+                  selectedEvent &&
+                  selectedEvent.timestamp === event.timestamp &&
+                  selectedEvent.jid === event.jid &&
+                  selectedEvent.type === event.type;
+                const eventTypeLabel =
+                  event.type === "status_change"
+                    ? "Status Change"
+                    : event.type === "rtt_sample"
+                    ? "RTT Sample"
+                    : "Lookup";
 
-              <div
-                className={clsx(
-                  "w-12 h-12 rounded-xl flex items-center justify-center shrink-0 border shadow-2xl",
-                  event.type === "search"
-                    ? "bg-blue-500/10 text-blue-500 border-blue-500/20"
-                    : event.data.state === "Online"
-                    ? "bg-green-500/10 text-green-500 border-green-500/20 animate-pulse"
-                    : event.data.state === "Standby"
-                    ? "bg-amber-500/10 text-amber-500 border-amber-500/20"
-                    : "bg-slate-800/50 text-slate-500 border-slate-700/50"
-                )}
-              >
-                {event.type === "search" ? (
-                  <Search className="w-5 h-5" />
-                ) : event.type === "status_change" ? (
-                  <User className="w-5 h-5" />
-                ) : (
-                  <Smartphone className="w-5 h-5" />
-                )}
-              </div>
-
-              <div className="flex-1 min-w-0">
-                <div className="flex justify-between items-start mb-2">
-                  <div className="flex flex-col">
-                    <h3 className="text-sm font-black text-white tracking-widest uppercase">
-                      {event.jid.split("@")[0]}
-                    </h3>
-                    <div className="flex items-center gap-2 mt-1">
-                      <span className="text-[9px] font-black px-2 py-0.5 rounded bg-slate-900 border border-slate-800 text-slate-500 uppercase tracking-widest">
-                        {event.platform}
+                return (
+                  <button
+                    key={`${event.jid}-${event.timestamp}-${i}`}
+                    type="button"
+                    onClick={() => setSelectedEvent(event)}
+                    className={clsx(
+                      "w-full rounded-2xl border px-4 py-5 text-left transition",
+                      isActive
+                        ? "border-indigo-500/70 bg-indigo-500/10 shadow-lg"
+                        : "border-slate-800 bg-[#0a0a0c] hover:border-indigo-500/40"
+                    )}
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="text-2xl leading-none">
+                        {numberMeta.flag}
+                      </span>
+                      <div>
+                        <p className="text-sm font-black text-white tracking-widest uppercase">
+                          {formattedNumber}
+                        </p>
+                        <p className="text-[9px] uppercase tracking-[0.3em] text-slate-500">
+                          {event.platform} · {eventTypeLabel}
+                        </p>
+                      </div>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+            {selectedEvent && (
+              <aside className="lg:w-80 w-full rounded-2xl border border-slate-800 bg-[#0a0a0c] p-6 shadow-2xl flex flex-col gap-6">
+                <div>
+                  <p className="text-[10px] uppercase tracking-[0.3em] text-slate-500">
+                    Detail View
+                  </p>
+                  <div className="mt-4 flex items-center gap-3">
+                    <span className="text-3xl leading-none">
+                      {selectedNumberMeta?.flag || "🏳️"}
+                    </span>
+                    <div className="flex flex-col">
+                      <p className="text-lg font-black text-white uppercase tracking-tight">
+                        {selectedNumberMeta?.formatted ||
+                          selectedNumberMeta?.raw ||
+                          extractNumber(selectedEvent)}
+                      </p>
+                      <span className="text-[10px] uppercase tracking-[0.3em] text-slate-500">
+                        {selectedEvent.platform} ·
+                        {selectedEvent.type === "status_change"
+                          ? " Status Change"
+                          : selectedEvent.type === "rtt_sample"
+                          ? " RTT Sample"
+                          : " Lookup"}
                       </span>
                     </div>
-                  </div>
-                  <div className="flex flex-col items-end">
-                    <span className="text-[10px] font-bold text-slate-600 flex items-center gap-1.5 whitespace-nowrap">
-                      <Clock className="w-3 h-3" />
-                      {new Date(event.timestamp).toLocaleTimeString([], {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                        second: "2-digit",
-                      })}
-                    </span>
-                    <span className="text-[8px] font-medium text-slate-800 tracking-tighter mt-0.5">
-                      {new Date(event.timestamp).toLocaleDateString()}
-                    </span>
                   </div>
                 </div>
-
-                <div className="text-xs text-slate-400 flex flex-wrap items-center gap-x-4 gap-y-2">
-                  {event.type === "search" && (
-                    <div className="flex items-center gap-2">
-                      <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
-                      <span className="font-bold uppercase tracking-tighter text-[10px]">
-                        Target Lookup Initiated
-                      </span>
-                    </div>
-                  )}
-                  {event.type === "status_change" && (
-                    <div className="flex items-center gap-3">
-                      <div className="flex items-center gap-1.5">
-                        <span
-                          className={clsx(
-                            "w-1.5 h-1.5 rounded-full",
-                            event.data.state === "Online"
-                              ? "bg-green-500"
-                              : event.data.state === "Standby"
-                              ? "bg-amber-500"
-                              : "bg-red-500"
-                          )}
-                        />
-                        <span
-                          className={clsx(
-                            "font-black uppercase tracking-widest text-[10px]",
-                            event.data.state === "Online"
-                              ? "text-green-500"
-                              : event.data.state === "Standby"
-                              ? "text-amber-500"
-                              : "text-red-500"
-                          )}
-                        >
-                          {event.data.state}
+                <div className="space-y-2">
+                  <p className="text-[10px] uppercase tracking-[0.3em] text-slate-500">
+                    Status
+                  </p>
+                  <span
+                    className={clsx(
+                      "inline-flex items-center gap-2 rounded-full px-4 py-2 text-[11px] font-black uppercase tracking-[0.3em]",
+                      statusBadgeClasses(selectedStatus)
+                    )}
+                  >
+                    <span className="h-2 w-2 rounded-full bg-current" />
+                    {selectedStatus}
+                  </span>
+                </div>
+                <div className="space-y-2">
+                  <p className="text-[10px] uppercase tracking-[0.3em] text-slate-500">
+                    Operating System
+                  </p>
+                  <div className="flex items-center gap-3">
+                    {selectedOsMeta?.icon ? (
+                      <img
+                        src={selectedOsMeta.icon}
+                        alt={selectedOsMeta.label}
+                        className="h-6 w-6"
+                      />
+                    ) : (
+                      <div className="h-6 w-6 rounded bg-slate-900" />
+                    )}
+                    <div className="flex flex-col">
+                      <p className="text-sm font-black text-white uppercase tracking-tight">
+                        {selectedOsMeta?.label}
+                      </p>
+                      {selectedOsMeta?.confidence !== undefined && (
+                        <span className="text-[9px] text-indigo-400 font-bold">
+                          {(selectedOsMeta.confidence * 100).toFixed(0)}%
+                          confidence
                         </span>
-                      </div>
-                      {event.data.rtt && (
-                        <div className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-white/5 border border-white/5">
-                          <Zap className="w-3 h-3 text-indigo-400" />
-                          <span className="text-slate-500 font-mono text-[10px]">
-                            {event.data.rtt}ms
-                          </span>
-                        </div>
                       )}
                     </div>
-                  )}
+                  </div>
                 </div>
-              </div>
-            </div>
-          ))
+                <div className="space-y-2">
+                  <p className="text-[10px] uppercase tracking-[0.3em] text-slate-500">
+                    Time of Event
+                  </p>
+                  <div className="flex items-center gap-2 text-sm font-black text-white">
+                    <Clock className="w-4 h-4 text-slate-500" />
+                    <span>
+                      {selectedTimestamp
+                        ? selectedTimestamp.toLocaleString()
+                        : "-"}
+                    </span>
+                  </div>
+                </div>
+                {selectedEvent.data?.rtt && (
+                  <div className="space-y-2">
+                    <p className="text-[10px] uppercase tracking-[0.3em] text-slate-500">
+                      RTT
+                    </p>
+                    <p className="text-lg font-black text-indigo-400">
+                      {selectedEvent.data.rtt}ms
+                    </p>
+                  </div>
+                )}
+              </aside>
+            )}
+          </div>
         )}
       </div>
     </div>

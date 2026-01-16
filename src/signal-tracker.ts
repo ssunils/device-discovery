@@ -560,6 +560,29 @@ export class SignalTracker {
 
     logger.info("Tracking stopped");
   }
+
+  /**
+   * Pause tracking temporarily without cleaning up resources
+   */
+  public pauseTracking() {
+    this.isTracking = false;
+
+    if (this.pendingProbeTimeout) {
+      clearTimeout(this.pendingProbeTimeout);
+      this.pendingProbeTimeout = null;
+    }
+
+    logger.info("Tracking paused");
+  }
+
+  /**
+   * Resume tracking from a paused state
+   */
+  public resumeTracking() {
+    this.isTracking = true;
+    // Probes will resume naturally on next update cycle
+    logger.info("Tracking resumed");
+  }
 }
 
 /**

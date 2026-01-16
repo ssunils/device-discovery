@@ -951,12 +951,21 @@ export class WhatsAppTracker {
         metrics.state = "Standby";
       }
 
+      const osSnapshot = this.osDetails
+        ? {
+            detectedOS: this.osDetails.detectedOS,
+            confidence: this.osDetails.confidence,
+            source: this.osDetails.source,
+          }
+        : this.osType;
+
       if (oldState !== metrics.state) {
         historyManager.logEvent("status_change", jid, "whatsapp", {
           state: metrics.state,
           rtt: metrics.lastRtt,
           avg: movingAvg,
           threshold,
+          os: osSnapshot,
         });
       }
     } else {
@@ -965,10 +974,19 @@ export class WhatsAppTracker {
 
     // Periodically log RTT samples for detailed history
     if (metrics.rttHistory.length % 5 === 0) {
+      const osSnapshot = this.osDetails
+        ? {
+            detectedOS: this.osDetails.detectedOS,
+            confidence: this.osDetails.confidence,
+            source: this.osDetails.source,
+          }
+        : this.osType;
+
       historyManager.logEvent("rtt_sample", jid, "whatsapp", {
         rtt: metrics.lastRtt,
         avg: movingAvg,
         state: metrics.state,
+        os: osSnapshot,
       });
     }
 
@@ -1079,5 +1097,29 @@ export class WhatsAppTracker {
     }
 
     logger.info("Stopping tracking");
+  }
+
+  /**
+   * Pause tracking temporarily without cleaning up resources
+   */
+  public pauseTracking() {
+    this.isTracking = false;
+
+    // Clear all pending probe timeouts
+    for (const timeoutId of this.probeTimeouts.values()) {
+      clearTimeout(timeoutId);
+    }
+    this.probeTimeouts.clear();
+
+    logger.info("Tracking paused");
+  }
+
+  /**
+   * Resume tracking from a paused state
+   */
+  public resumeTracking() {
+    this.isTracking = true;
+    // Probes will resume naturally on next update cycle
+    logger.info("Tracking resumed");
   }
 }

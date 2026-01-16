@@ -541,6 +541,24 @@ io.on("connection", (socket) => {
     }
   });
 
+  socket.on("pause-contact", (jid: string) => {
+    console.log(`Request to pause tracking: ${jid}`);
+    const entry = trackers.get(jid);
+    if (entry) {
+      entry.tracker.pauseTracking();
+      socket.emit("contact-paused", jid);
+    }
+  });
+
+  socket.on("resume-contact", (jid: string) => {
+    console.log(`Request to resume tracking: ${jid}`);
+    const entry = trackers.get(jid);
+    if (entry) {
+      entry.tracker.resumeTracking();
+      socket.emit("contact-resumed", jid);
+    }
+  });
+
   socket.on("set-probe-method", (method: ProbeMethod) => {
     console.log(`Request to change probe method to: ${method}`);
     if (method !== "delete" && method !== "reaction") {
