@@ -3,6 +3,7 @@ import { socket } from "../App";
 import { History as HistoryIcon, Clock, Trash2, ArrowLeft } from "lucide-react";
 import clsx from "clsx";
 import { formatPhoneNumber } from "../utils/phone";
+import { getImageUrl } from "../utils/imageUrl";
 
 interface HistoryEvent {
   type: "search" | "status_change" | "rtt_sample";
@@ -10,6 +11,7 @@ interface HistoryEvent {
   jid: string;
   platform: "whatsapp" | "signal";
   data: any;
+  profilePicPath?: string;
 }
 
 // Helper functions
@@ -51,6 +53,7 @@ interface GroupedHistoryEntry {
   events: HistoryEvent[];
   latestEvent: HistoryEvent;
   osMeta: ReturnType<typeof normalizeOs>;
+  profilePicPath?: string;
 }
 
 interface HistoryProps {
@@ -157,15 +160,23 @@ export function History({ onBack }: HistoryProps) {
         events: [],
         latestEvent: event,
         osMeta: normalizeOs(event),
+        profilePicPath: event.profilePicPath,
       });
     }
 
     const group = groupedByNumber.get(phoneNumber)!;
     group.events.push(event);
-    // Keep the event with OS info or the latest event
-    if (normalizeOs(event).label !== "Unknown" || group.latestEvent === event) {
+    // Keep the event with OS info or the latest event, and prefer events with profilePicPath
+    if (
+      normalizeOs(event).label !== "Unknown" ||
+      event.profilePicPath ||
+      group.latestEvent === event
+    ) {
       group.latestEvent = event;
       group.osMeta = normalizeOs(event);
+      if (event.profilePicPath) {
+        group.profilePicPath = event.profilePicPath;
+      }
     }
   });
 
@@ -313,6 +324,14 @@ export function History({ onBack }: HistoryProps) {
                   >
                     <div className="flex items-center gap-3 justify-between">
                       <div className="flex items-center gap-3 flex-1">
+                        {entry.profilePicPath &&
+                          getImageUrl(entry.profilePicPath) && (
+                            <img
+                              src={getImageUrl(entry.profilePicPath)!}
+                              alt="Profile"
+                              className=" w-10 h-10 rounded-xl object-cover border border-slate-700"
+                            />
+                          )}
                         <span className="text-2xl leading-none">
                           {formatPhoneNumber(entry.phoneNumber).flag}
                         </span>

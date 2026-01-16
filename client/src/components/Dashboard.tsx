@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { socket, Platform, ConnectionState, ProbeMethod } from "../App";
 import { ContactCard } from "./ContactCard";
+import { getImageUrl } from "../utils/imageUrl";
 import { Login } from "./Login";
 
 interface DashboardProps {
@@ -417,7 +418,7 @@ export function Dashboard({
               devices={contact.devices}
               deviceCount={contact.deviceCount}
               presence={contact.presence}
-              profilePic={contact.profilePic}
+              profilePic={getImageUrl(contact.profilePic)}
               onRemove={() => handleRemove(contact.jid)}
               onPause={() => handlePause(contact.jid)}
               onResume={() => handleResume(contact.jid)}

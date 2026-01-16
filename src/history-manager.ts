@@ -8,6 +8,7 @@ export interface HistoryEvent {
   jid: string;
   platform: "whatsapp" | "signal";
   data: any;
+  profilePicPath?: string;
 }
 
 class HistoryManager {
@@ -57,7 +58,8 @@ class HistoryManager {
     type: HistoryEvent["type"],
     jid: string,
     platform: HistoryEvent["platform"],
-    data: any
+    data: any,
+    profilePicPath?: string
   ) {
     await this.ensureLoaded();
     const event: HistoryEvent = {
@@ -66,6 +68,7 @@ class HistoryManager {
       jid,
       platform,
       data,
+      profilePicPath,
     };
 
     // Limit history size to prevent file bloat (e.g., last 5000 events)

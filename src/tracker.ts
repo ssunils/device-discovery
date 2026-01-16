@@ -188,6 +188,7 @@ export class WhatsAppTracker {
   private osDetectionMaxAttempts: number = 12; // increased retries to cover session fetch delays
   private osDetectionInterval?: NodeJS.Timeout;
   private sessionWatcher?: FSWatcher;
+  public profilePicPath: string | undefined = undefined; // Local path to cached profile picture
   public onUpdate?: (data: any) => void;
 
   constructor(sock: WASocket, targetJid: string, debugMode: boolean = false) {
@@ -828,10 +829,16 @@ export class WhatsAppTracker {
         lastRtt: timeout,
         lastUpdate: Date.now(),
       });
-      historyManager.logEvent("status_change", jid, "whatsapp", {
-        state: "OFFLINE",
-        rtt: timeout,
-      });
+      historyManager.logEvent(
+        "status_change",
+        jid,
+        "whatsapp",
+        {
+          state: "OFFLINE",
+          rtt: timeout,
+        },
+        this.profilePicPath
+      );
     } else {
       const metrics = this.deviceMetrics.get(jid)!;
       const oldState = metrics.state;
@@ -839,10 +846,16 @@ export class WhatsAppTracker {
       metrics.lastRtt = timeout;
       metrics.lastUpdate = Date.now();
       if (oldState !== "OFFLINE") {
-        historyManager.logEvent("status_change", jid, "whatsapp", {
-          state: "OFFLINE",
-          rtt: timeout,
-        });
+        historyManager.logEvent(
+          "status_change",
+          jid,
+          "whatsapp",
+          {
+            state: "OFFLINE",
+            rtt: timeout,
+          },
+          this.profilePicPath
+        );
       }
     }
 
@@ -960,13 +973,19 @@ export class WhatsAppTracker {
         : this.osType;
 
       if (oldState !== metrics.state) {
-        historyManager.logEvent("status_change", jid, "whatsapp", {
-          state: metrics.state,
-          rtt: metrics.lastRtt,
-          avg: movingAvg,
-          threshold,
-          os: osSnapshot,
-        });
+        historyManager.logEvent(
+          "status_change",
+          jid,
+          "whatsapp",
+          {
+            state: metrics.state,
+            rtt: metrics.lastRtt,
+            avg: movingAvg,
+            threshold,
+            os: osSnapshot,
+          },
+          this.profilePicPath
+        );
       }
     } else {
       metrics.state = "Calibrating...";
@@ -982,12 +1001,18 @@ export class WhatsAppTracker {
           }
         : this.osType;
 
-      historyManager.logEvent("rtt_sample", jid, "whatsapp", {
-        rtt: metrics.lastRtt,
-        avg: movingAvg,
-        state: metrics.state,
-        os: osSnapshot,
-      });
+      historyManager.logEvent(
+        "rtt_sample",
+        jid,
+        "whatsapp",
+        {
+          rtt: metrics.lastRtt,
+          avg: movingAvg,
+          state: metrics.state,
+          os: osSnapshot,
+        },
+        this.profilePicPath
+      );
     }
 
     // Normal mode: Formatted output

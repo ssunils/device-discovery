@@ -24,12 +24,16 @@ import {
   checkSignalNumber,
 } from "./signal-tracker.js";
 import { historyManager } from "./history-manager.js";
+import { imageManager } from "./image-manager.js";
 
 // Configuration
 const SIGNAL_API_URL = process.env.SIGNAL_API_URL || "http://localhost:8080";
 
 const app = express();
 app.use(cors());
+
+// Serve static images
+app.use("/images", express.static("data/images"));
 
 const httpServer = createServer(app);
 const io = new Server(httpServer, {
@@ -468,9 +472,15 @@ io.on("connection", (socket) => {
 
           if (result?.exists) {
             // Log search to history
-            historyManager.logEvent("search", result.jid, "whatsapp", {
-              number: cleanNumber,
-            });
+            historyManager.logEvent(
+              "search",
+              result.jid,
+              "whatsapp",
+              {
+                number: cleanNumber,
+              }
+              // profilePicPath will be added after image is downloaded
+            );
 
             const tracker = new WhatsAppTracker(sock, result.jid);
             tracker.setProbeMethod(globalProbeMethod);
@@ -512,7 +522,17 @@ io.on("connection", (socket) => {
               platform: "whatsapp",
             });
 
-            io.emit("profile-pic", { jid: result.jid, url: ppUrl });
+            // Download and save the profile picture locally
+            const localImagePath = await imageManager.downloadAndSaveImage(
+              ppUrl ?? null,
+              result.jid
+            );
+            const imageUrlToSend = localImagePath || ppUrl || null;
+
+            // Store the local image path in the tracker for history logging
+            tracker.profilePicPath = localImagePath || undefined;
+
+            io.emit("profile-pic", { jid: result.jid, url: imageUrlToSend });
             io.emit("contact-name", { jid: result.jid, name: contactName });
           } else {
             socket.emit("error", {
