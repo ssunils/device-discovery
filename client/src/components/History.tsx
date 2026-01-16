@@ -54,7 +54,7 @@ export function History({ onBack }: HistoryProps) {
   };
 
   const filteredEvents = events.filter(
-    (e) => filter === "all" || e.type === filter
+    (e) => (filter === "all" || e.type === filter) && e.platform === "whatsapp"
   );
 
   return (
@@ -75,7 +75,9 @@ export function History({ onBack }: HistoryProps) {
                 Intercept Logs
               </h2>
             </div>
-            <span className="text-[10px] font-black text-slate-600 uppercase tracking-[0.2em] ml-7">System History Persistence</span>
+            <span className="text-[10px] font-black text-slate-600 uppercase tracking-[0.2em] ml-7">
+              System History Persistence
+            </span>
           </div>
         </div>
 
@@ -129,7 +131,9 @@ export function History({ onBack }: HistoryProps) {
         {filteredEvents.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-32 text-slate-800">
             <HistoryIcon className="w-20 h-20 mb-6 opacity-10" />
-            <p className="font-black uppercase tracking-[0.3em] text-sm">No Logs Recovered</p>
+            <p className="font-black uppercase tracking-[0.3em] text-sm">
+              No Logs Recovered
+            </p>
           </div>
         ) : (
           filteredEvents.map((event, i) => (
@@ -138,7 +142,7 @@ export function History({ onBack }: HistoryProps) {
               className="group flex gap-5 p-5 rounded-2xl border border-slate-800/50 hover:border-indigo-500/30 transition-all bg-[#0a0a0c] relative overflow-hidden"
             >
               <div className="absolute top-0 left-0 w-1 h-full opacity-0 group-hover:opacity-100 transition-opacity bg-indigo-500" />
-              
+
               <div
                 className={clsx(
                   "w-12 h-12 rounded-xl flex items-center justify-center shrink-0 border shadow-2xl",
@@ -159,7 +163,7 @@ export function History({ onBack }: HistoryProps) {
                   <Smartphone className="w-5 h-5" />
                 )}
               </div>
-              
+
               <div className="flex-1 min-w-0">
                 <div className="flex justify-between items-start mb-2">
                   <div className="flex flex-col">
@@ -175,7 +179,11 @@ export function History({ onBack }: HistoryProps) {
                   <div className="flex flex-col items-end">
                     <span className="text-[10px] font-bold text-slate-600 flex items-center gap-1.5 whitespace-nowrap">
                       <Clock className="w-3 h-3" />
-                      {new Date(event.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                      {new Date(event.timestamp).toLocaleTimeString([], {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                        second: "2-digit",
+                      })}
                     </span>
                     <span className="text-[8px] font-medium text-slate-800 tracking-tighter mt-0.5">
                       {new Date(event.timestamp).toLocaleDateString()}
@@ -187,27 +195,43 @@ export function History({ onBack }: HistoryProps) {
                   {event.type === "search" && (
                     <div className="flex items-center gap-2">
                       <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
-                      <span className="font-bold uppercase tracking-tighter text-[10px]">Target Lookup Initiated</span>
+                      <span className="font-bold uppercase tracking-tighter text-[10px]">
+                        Target Lookup Initiated
+                      </span>
                     </div>
                   )}
                   {event.type === "status_change" && (
                     <div className="flex items-center gap-3">
                       <div className="flex items-center gap-1.5">
-                        <span className={clsx(
-                           "w-1.5 h-1.5 rounded-full",
-                           event.data.state === "Online" ? "bg-green-500" : event.data.state === "Standby" ? "bg-amber-500" : "bg-red-500"
-                        )} />
-                        <span className={clsx(
-                          "font-black uppercase tracking-widest text-[10px]",
-                          event.data.state === "Online" ? "text-green-500" : event.data.state === "Standby" ? "text-amber-500" : "text-red-500"
-                        )}>
+                        <span
+                          className={clsx(
+                            "w-1.5 h-1.5 rounded-full",
+                            event.data.state === "Online"
+                              ? "bg-green-500"
+                              : event.data.state === "Standby"
+                              ? "bg-amber-500"
+                              : "bg-red-500"
+                          )}
+                        />
+                        <span
+                          className={clsx(
+                            "font-black uppercase tracking-widest text-[10px]",
+                            event.data.state === "Online"
+                              ? "text-green-500"
+                              : event.data.state === "Standby"
+                              ? "text-amber-500"
+                              : "text-red-500"
+                          )}
+                        >
                           {event.data.state}
                         </span>
                       </div>
                       {event.data.rtt && (
                         <div className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-white/5 border border-white/5">
                           <Zap className="w-3 h-3 text-indigo-400" />
-                          <span className="text-slate-500 font-mono text-[10px]">{event.data.rtt}ms</span>
+                          <span className="text-slate-500 font-mono text-[10px]">
+                            {event.data.rtt}ms
+                          </span>
                         </div>
                       )}
                     </div>

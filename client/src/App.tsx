@@ -41,7 +41,7 @@ function App() {
     whatsappQr: null,
   });
 
-  const isAnyPlatformReady = connectionState.whatsapp || connectionState.signal;
+  const isAnyPlatformReady = connectionState.whatsapp;
 
   useEffect(() => {
     function onConnect() {

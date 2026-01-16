@@ -120,64 +120,65 @@ export function ContactCard({
         </div>
         <button
           onClick={onRemove}
-          className="p-2 text-slate-500 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-all"
-          title="Terminate Trace"
+          className="flex items-center gap-2 px-4 py-2 bg-red-500/10 border border-red-500/20 text-red-500 hover:bg-red-500 hover:text-white rounded-xl transition-all font-black text-[10px] uppercase tracking-widest shadow-lg shadow-red-500/10"
         >
-          <Square size={18} fill="currentColor" className="opacity-20" />
+          <Square size={12} fill="currentColor" />
+          Terminate
         </button>
       </div>
 
-      <div className="p-6 space-y-6">
+      <div className="p-6">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          {/* Visual Status */}
-          <div className="lg:col-span-4 flex flex-col items-center justify-center p-6 bg-[#0a0a0c] rounded-2xl border border-slate-800/50">
-            <div className="relative mb-6">
-              <div className="w-24 h-24 rounded-2xl overflow-hidden bg-slate-900 border-2 border-slate-800 shadow-2xl rotate-3 group-hover:rotate-0 transition-transform duration-500">
-                {profilePic ? (
-                  <img
-                    src={profilePic}
-                    alt="Target"
-                    className={clsx(
-                      "w-full h-full object-cover grayscale brightness-75 group-hover:grayscale-0 group-hover:brightness-100 transition-all duration-500",
-                      privacyMode && "blur-xl"
-                    )}
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center">
-                    <Shield size={32} className="text-slate-800" />
-                  </div>
-                )}
+          {/* Information & Analysis Column */}
+          <div className="lg:col-span-5 space-y-6 flex flex-col">
+            {/* Visual Status */}
+            <div className="flex flex-col items-center justify-center p-6 bg-[#0a0a0c] rounded-2xl border border-slate-800/50">
+              <div className="relative mb-6">
+                <div className="w-24 h-24 rounded-2xl overflow-hidden bg-slate-900 border-2 border-slate-800 shadow-2xl rotate-3 group-hover:rotate-0 transition-transform duration-500">
+                  {profilePic ? (
+                    <img
+                      src={profilePic}
+                      alt="Target"
+                      className={clsx(
+                        "w-full h-full object-cover grayscale brightness-75 group-hover:grayscale-0 group-hover:brightness-100 transition-all duration-500",
+                        privacyMode && "blur-xl"
+                      )}
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <Shield size={32} className="text-slate-800" />
+                    </div>
+                  )}
+                </div>
+                <div
+                  className={clsx(
+                    "absolute -bottom-2 -right-2 w-6 h-6 rounded-lg border-4 border-[#0a0a0c] shadow-xl",
+                    currentStatus === "OFFLINE"
+                      ? "bg-red-500"
+                      : currentStatus.includes("Online")
+                      ? "bg-green-500 animate-pulse"
+                      : "bg-amber-500"
+                  )}
+                />
               </div>
-              <div
-                className={clsx(
-                  "absolute -bottom-2 -right-2 w-6 h-6 rounded-lg border-4 border-[#0a0a0c] shadow-xl",
-                  currentStatus === "OFFLINE"
-                    ? "bg-red-500"
-                    : currentStatus.includes("Online")
-                    ? "bg-green-500 animate-pulse"
-                    : "bg-amber-500"
-                )}
-              />
+
+              <div className="text-center">
+                <div
+                  className={`text-xs font-black uppercase tracking-[0.2em] mb-1 ${
+                    currentStatus.includes("Online")
+                      ? "text-green-500"
+                      : "text-slate-500"
+                  }`}
+                >
+                  {currentStatus}
+                </div>
+                <div className="text-[10px] text-slate-600 font-bold uppercase tracking-widest flex items-center justify-center gap-1">
+                  <Globe size={10} /> {presence || "SIGNAL DEAD"}
+                </div>
+              </div>
             </div>
 
-            <div className="text-center">
-              <div
-                className={`text-xs font-black uppercase tracking-[0.2em] mb-1 ${
-                  currentStatus.includes("Online")
-                    ? "text-green-500"
-                    : "text-slate-500"
-                }`}
-              >
-                {currentStatus}
-              </div>
-              <div className="text-[10px] text-slate-600 font-bold uppercase tracking-widest flex items-center justify-center gap-1">
-                <Globe size={10} /> {presence || "SIGNAL DEAD"}
-              </div>
-            </div>
-          </div>
-
-          {/* Metrics Column */}
-          <div className="lg:col-span-8 space-y-4">
+            {/* Metrics Grid */}
             <div className="grid grid-cols-3 gap-3">
               <div className="bg-[#0a0a0c] p-3 rounded-xl border border-slate-800/50">
                 <div className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1 flex items-center gap-1">
@@ -209,7 +210,7 @@ export function ContactCard({
             </div>
 
             {/* Device Analytics */}
-            <div className="bg-[#0a0a0c] p-4 rounded-xl border border-slate-800/50">
+            <div className="bg-[#0a0a0c] p-4 rounded-xl border border-slate-800/50 flex-grow">
               <h5 className="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em] mb-3">
                 Target Devices
               </h5>
@@ -275,53 +276,58 @@ export function ContactCard({
               </div>
             </div>
           </div>
-        </div>
 
-        {/* Neural Network Chart (RTT) */}
-        <div className="bg-[#0a0a0c] p-5 rounded-2xl border border-slate-800/50 h-[220px] relative overflow-hidden">
-          <div className="absolute top-4 left-5 z-10">
-            <h5 className="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em] flex items-center gap-2">
-              <Zap size={10} className="text-indigo-500" /> Signal Integrity Log
-            </h5>
+          {/* Neural Network Chart (RTT) - RIGHT */}
+          <div className="lg:col-span-7 flex flex-col gap-6">
+            <div className="bg-[#0a0a0c] p-5 rounded-2xl border border-slate-800/50 h-full relative overflow-hidden flex flex-col">
+              <div className="absolute top-4 left-5 z-10">
+                <h5 className="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em] flex items-center gap-2">
+                  <Zap size={10} className="text-indigo-500" /> Signal Integrity
+                  Log
+                </h5>
+              </div>
+              <div className="flex-grow pt-8">
+                <ResponsiveContainer width="100%" height="100%" minHeight={400}>
+                  <LineChart data={data}>
+                    <CartesianGrid
+                      strokeDasharray="3 3"
+                      vertical={false}
+                      stroke="#1e293b"
+                      strokeOpacity={0.2}
+                    />
+                    <XAxis dataKey="timestamp" hide />
+                    <YAxis domain={["auto", "auto"]} hide />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: "#0f172a",
+                        border: "1px solid #334155",
+                        borderRadius: "12px",
+                        fontSize: "10px",
+                      }}
+                      itemStyle={{ color: "#94a3b8", fontWeight: "bold" }}
+                      labelStyle={{ display: "none" }}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="avg"
+                      stroke="#6366f1"
+                      strokeWidth={3}
+                      dot={false}
+                      animationDuration={1000}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="threshold"
+                      stroke="#ef4444"
+                      strokeWidth={1}
+                      strokeDasharray="5 5"
+                      dot={false}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
           </div>
-          <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={data}>
-              <CartesianGrid
-                strokeDasharray="3 3"
-                vertical={false}
-                stroke="#1e293b"
-                strokeOpacity={0.2}
-              />
-              <XAxis dataKey="timestamp" hide />
-              <YAxis domain={["auto", "auto"]} hide />
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: "#0f172a",
-                  border: "1px solid #334155",
-                  borderRadius: "12px",
-                  fontSize: "10px",
-                }}
-                itemStyle={{ color: "#94a3b8", fontWeight: "bold" }}
-                labelStyle={{ display: "none" }}
-              />
-              <Line
-                type="monotone"
-                dataKey="avg"
-                stroke="#6366f1"
-                strokeWidth={3}
-                dot={false}
-                animationDuration={1000}
-              />
-              <Line
-                type="monotone"
-                dataKey="threshold"
-                stroke="#ef4444"
-                strokeWidth={1}
-                strokeDasharray="5 5"
-                dot={false}
-              />
-            </LineChart>
-          </ResponsiveContainer>
         </div>
       </div>
     </div>

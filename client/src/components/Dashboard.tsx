@@ -5,7 +5,6 @@ import {
   Settings,
   AlertCircle,
   Shield,
-  Search,
 } from "lucide-react";
 import { socket, Platform, ConnectionState, ProbeMethod } from "../App";
 import { ContactCard } from "./ContactCard";
@@ -54,9 +53,8 @@ export function Dashboard({
   onProbeMethodChange,
 }: DashboardProps) {
   const [inputNumber, setInputNumber] = useState("");
-  const [selectedPlatform, setSelectedPlatform] = useState<Platform>(
-    connectionState.whatsapp ? "whatsapp" : "signal"
-  );
+  const [selectedPlatform, setSelectedPlatform] =
+    useState<Platform>("whatsapp");
   const [contacts, setContacts] = useState<Map<string, ContactInfo>>(new Map());
   const [error, setError] = useState<string | null>(null);
   const [showConnections, setShowConnections] = useState(false);
@@ -277,17 +275,6 @@ export function Dashboard({
                   <MessageCircle size={14} />
                   WA
                 </button>
-                <button
-                  onClick={() => setSelectedPlatform("signal")}
-                  className={`px-4 py-2 rounded-lg text-xs font-black transition-all flex items-center gap-2 ${
-                    selectedPlatform === "signal"
-                      ? "bg-blue-500/10 text-blue-500 border border-blue-500/30"
-                      : "text-slate-500 hover:text-slate-300"
-                  }`}
-                >
-                  <Search size={14} />
-                  SIG
-                </button>
               </div>
               <input
                 type="text"
@@ -378,7 +365,7 @@ export function Dashboard({
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 gap-8">
           {Array.from(contacts.values()).map((contact) => (
             <ContactCard
               key={contact.jid}
