@@ -132,8 +132,8 @@ function App() {
       <div className="max-w-7xl mx-auto px-4 py-6">
         <header className="mb-10 bg-[#16161a] border border-slate-800 rounded-2xl p-4 flex flex-col md:flex-row justify-between items-center gap-4 shadow-xl">
           <div className="flex items-center gap-4">
-            <div className="p-2.5 bg-indigo-600/20 rounded-xl">
-              <SignalIcon color="#fff" className="w-8 h-8 text-indigo-500" />
+            <div className="p-2.5 bg-blue-600/20 rounded-xl">
+              <SignalIcon color="#fff" className="w-8 h-8 text-blue-500" />
             </div>
             <div>
               <h1 className="text-2xl font-black bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent">
@@ -158,7 +158,7 @@ function App() {
                 onClick={() => setView("dashboard")}
                 className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all ${
                   view === "dashboard"
-                    ? "bg-indigo-600 text-white shadow-lg"
+                    ? "bg-blue-600 text-white shadow-lg"
                     : "text-slate-400 hover:text-slate-200 hover:bg-slate-800"
                 }`}
               >
@@ -169,7 +169,7 @@ function App() {
                 onClick={() => setView("history")}
                 className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all ${
                   view === "history"
-                    ? "bg-indigo-600 text-white shadow-lg"
+                    ? "bg-blue-600 text-white shadow-lg"
                     : "text-slate-400 hover:text-slate-200 hover:bg-slate-800"
                 }`}
               >

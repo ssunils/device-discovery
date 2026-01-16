@@ -239,7 +239,7 @@ export function History({ onBack }: HistoryProps) {
           </button>
           <div className="flex flex-col">
             <div className="flex items-center gap-2">
-              <HistoryIcon className="w-5 h-5 text-indigo-500" />
+              <HistoryIcon className="w-5 h-5 text-blue-500" />
               <h2 className="text-xl font-black text-white uppercase tracking-tight">
                 Intercept Logs
               </h2>
@@ -257,7 +257,7 @@ export function History({ onBack }: HistoryProps) {
               className={clsx(
                 "px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all",
                 filter === "all"
-                  ? "bg-indigo-600 text-white shadow-lg"
+                  ? "bg-blue-600 text-white shadow-lg"
                   : "text-slate-600 hover:text-slate-400"
               )}
             >
@@ -268,7 +268,7 @@ export function History({ onBack }: HistoryProps) {
               className={clsx(
                 "px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all",
                 filter === "search"
-                  ? "bg-indigo-600 text-white shadow-lg"
+                  ? "bg-blue-600 text-white shadow-lg"
                   : "text-slate-600 hover:text-slate-400"
               )}
             >
@@ -279,7 +279,7 @@ export function History({ onBack }: HistoryProps) {
               className={clsx(
                 "px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all",
                 filter === "status_change"
-                  ? "bg-indigo-600 text-white shadow-lg"
+                  ? "bg-blue-600 text-white shadow-lg"
                   : "text-slate-600 hover:text-slate-400"
               )}
             >
@@ -318,8 +318,8 @@ export function History({ onBack }: HistoryProps) {
                     className={clsx(
                       "w-full rounded-2xl border px-4 py-5 text-left transition",
                       isActive
-                        ? "border-indigo-500/70 bg-indigo-500/10 shadow-lg"
-                        : "border-slate-800 bg-[#0a0a0c] hover:border-indigo-500/40"
+                        ? "border-blue-500/70 bg-blue-500/10 shadow-lg"
+                        : "border-slate-800 bg-[#0a0a0c] hover:border-blue-500/40"
                     )}
                   >
                     <div className="flex items-center gap-3 justify-between">
@@ -414,7 +414,7 @@ export function History({ onBack }: HistoryProps) {
                         {selectedOsMeta?.label}
                       </p>
                       {selectedOsMeta?.confidence !== undefined && (
-                        <span className="text-[9px] text-indigo-400 font-bold">
+                        <span className="text-[9px] text-blue-400 font-bold">
                           {(selectedOsMeta.confidence * 100).toFixed(0)}%
                           confidence
                         </span>
@@ -440,7 +440,7 @@ export function History({ onBack }: HistoryProps) {
                     <p className="text-[10px] uppercase tracking-[0.3em] text-slate-500">
                       RTT
                     </p>
-                    <p className="text-lg font-black text-indigo-400">
+                    <p className="text-lg font-black text-blue-400">
                       {selectedEntry.latestEvent.data.rtt}ms
                     </p>
                   </div>

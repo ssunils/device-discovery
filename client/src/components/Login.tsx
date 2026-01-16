@@ -41,7 +41,7 @@ export function Login({ connectionState }: LoginProps) {
               ) : (
                 <div className="w-[220px] h-[220px] flex items-center justify-center text-slate-700 bg-slate-900 rounded-xl">
                   <div className="flex flex-col items-center gap-2">
-                    <div className="w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+                    <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
                     <span className="text-[10px] font-black uppercase tracking-widest">
                       Generating PK...
                     </span>

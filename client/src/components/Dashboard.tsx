@@ -295,8 +295,8 @@ export function Dashboard({
         {/* Add Contact Form */}
         <div className="lg:col-span-8 bg-[#16161a] p-6 rounded-2xl border border-slate-800 shadow-xl">
           <div className="flex items-center gap-3 mb-6">
-            <div className="w-10 h-10 bg-indigo-500/10 rounded-xl flex items-center justify-center">
-              <Plus className="text-indigo-500" size={24} />
+            <div className="w-10 h-10 bg-blue-500/10 rounded-xl flex items-center justify-center">
+              <Plus className="text-blue-500" size={24} />
             </div>
             <h2 className="text-xl font-black text-white uppercase tracking-tight">
               Target Acquisition
@@ -304,7 +304,7 @@ export function Dashboard({
           </div>
 
           <div className="flex flex-col md:flex-row gap-4">
-            <div className="flex-1 flex bg-[#0a0a0c] rounded-xl border border-slate-800 p-1 focus-within:border-indigo-500/50 transition-all">
+            <div className="flex-1 flex bg-[#0a0a0c] rounded-xl border border-slate-800 p-1 focus-within:border-blue-500/50 transition-all">
               <div className="flex p-1 gap-1">
                 <button
                   onClick={() => setSelectedPlatform("whatsapp")}
@@ -329,7 +329,7 @@ export function Dashboard({
             </div>
             <button
               onClick={handleAdd}
-              className="bg-indigo-600 hover:bg-indigo-500 text-white px-8 py-3 rounded-xl font-black transition-all shadow-lg shadow-indigo-600/20 flex items-center justify-center gap-2 uppercase text-sm tracking-widest"
+              className="bg-blue-600 hover:bg-blue-500 text-white px-8 py-3 rounded-xl font-black transition-all shadow-lg shadow-blue-600/20 flex items-center justify-center gap-2 uppercase text-sm tracking-widest"
             >
               Start Probe
             </button>
@@ -339,8 +339,8 @@ export function Dashboard({
         {/* System Settings */}
         <div className="lg:col-span-4 bg-[#16161a] p-6 rounded-2xl border border-slate-800 shadow-xl">
           <div className="flex items-center gap-3 mb-6">
-            <div className="w-10 h-10 bg-indigo-500/10 rounded-xl flex items-center justify-center">
-              <Settings className="text-indigo-500" size={24} />
+            <div className="w-10 h-10 bg-blue-500/10 rounded-xl flex items-center justify-center">
+              <Settings className="text-blue-500" size={24} />
             </div>
             <h2 className="text-xl font-black text-white uppercase tracking-tight">
               Logic
@@ -357,7 +357,7 @@ export function Dashboard({
                   onClick={() => onProbeMethodChange("delete")}
                   className={`px-3 py-1.5 rounded-md text-[10px] font-black transition-all ${
                     probeMethod === "delete"
-                      ? "bg-purple-600 text-white shadow-lg"
+                      ? "bg-blue-600 text-white shadow-lg"
                       : "text-slate-600 hover:text-slate-400"
                   }`}
                 >

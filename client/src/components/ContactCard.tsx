@@ -151,7 +151,7 @@ export function ContactCard({
               {primaryOs.label}
             </span>
             {primaryOs.confidence !== undefined && (
-              <span className="text-sm text-indigo-400 font-semibold">
+              <span className="text-sm text-blue-400 font-semibold">
                 {(primaryOs.confidence * 100).toFixed(0)}% confidence
               </span>
             )}
@@ -280,10 +280,10 @@ export function ContactCard({
                   </div>
                 </div>
                 <div className="bg-[#0a0a0c] p-3 rounded-xl border border-slate-800/50">
-                  <div className="text-sm font-black text-indigo-500 uppercase tracking-widest mb-1 flex items-center gap-1">
+                  <div className="text-sm font-black text-blue-500 uppercase tracking-widest mb-1 flex items-center gap-1">
                     THR
                   </div>
-                  <div className="text-lg font-black text-indigo-400">
+                  <div className="text-lg font-black text-blue-400">
                     {lastData?.threshold.toFixed(0) || "0"}
                     <span className="text-sm ml-1 text-slate-600">ms</span>
                   </div>
@@ -326,7 +326,7 @@ export function ContactCard({
                               <div className="flex items-center gap-2 mt-0.5">
                                 <div className="w-12 h-1 bg-slate-800 rounded-full overflow-hidden">
                                   <div
-                                    className="h-full bg-indigo-500"
+                                    className="h-full bg-blue-500"
                                     style={{
                                       width: `${osMeta.confidence * 100}%`,
                                     }}
@@ -365,7 +365,7 @@ export function ContactCard({
             <div className="bg-[#0a0a0c] p-5 rounded-2xl border border-slate-800/50 h-full relative overflow-hidden flex flex-col min-h-[500px]">
               <div className="absolute top-4 left-5 z-10">
                 <h5 className="text-sm font-black text-slate-500 uppercase tracking-[0.2em] flex items-center gap-2">
-                  <Zap size={10} className="text-indigo-500" /> Signal Integrity
+                  <Zap size={10} className="text-blue-500" /> Signal Integrity
                   Log
                 </h5>
               </div>
