@@ -6,6 +6,7 @@ import {
   Shield,
   ShieldOff,
   Signal as SignalIcon,
+  LogOut,
 } from "lucide-react";
 import { Login } from "./components/Login";
 import { Dashboard } from "./components/Dashboard";
@@ -101,6 +102,15 @@ function App() {
       setConnectionState((prev) => ({ ...prev, signalQrImage: url }));
     }
 
+    function onWhatsAppLoggedOut() {
+      console.log("[WHATSAPP] Logged out");
+      setConnectionState((prev) => ({
+        ...prev,
+        whatsapp: false,
+        whatsappQr: null,
+      }));
+    }
+
     socket.on("connect", onConnect);
     socket.on("disconnect", onDisconnect);
     socket.on("qr", onWhatsAppQr);
@@ -109,6 +119,7 @@ function App() {
     socket.on("signal-disconnected", onSignalDisconnected);
     socket.on("signal-api-status", onSignalApiStatus);
     socket.on("signal-qr-image", onSignalQrImage);
+    socket.on("whatsapp-logged-out", onWhatsAppLoggedOut);
 
     // Now connect after listeners are set up
     if (!socket.connected) {
@@ -124,6 +135,7 @@ function App() {
       socket.off("signal-disconnected", onSignalDisconnected);
       socket.off("signal-api-status", onSignalApiStatus);
       socket.off("signal-qr-image", onSignalQrImage);
+      socket.off("whatsapp-logged-out", onWhatsAppLoggedOut);
     };
   }, []);
 
@@ -193,6 +205,16 @@ function App() {
                 }
               >
                 {privacyMode ? <ShieldOff size={20} /> : <Shield size={20} />}
+              </button>
+            )}
+
+            {connectionState.whatsapp && (
+              <button
+                onClick={() => socket.emit("logout-whatsapp")}
+                className="p-2.5 rounded-xl border bg-amber-500/10 border-amber-500/50 text-amber-500 hover:text-amber-400 transition-all"
+                title="Logout from WhatsApp"
+              >
+                <LogOut size={20} />
               </button>
             )}
 

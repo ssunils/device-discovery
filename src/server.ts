@@ -609,6 +609,36 @@ io.on("connection", (socket) => {
     await historyManager.clearHistory();
     socket.emit("history-cleared");
   });
+
+  socket.on("logout-whatsapp", async () => {
+    console.log("Request to logout from WhatsApp");
+    try {
+      if (sock) {
+        // Stop all active trackers
+        for (const entry of trackers.values()) {
+          if (entry.platform === "whatsapp") {
+            entry.tracker.stopTracking();
+          }
+        }
+        trackers.clear();
+
+        // Logout from WhatsApp
+        await sock.logout();
+        isWhatsAppConnected = false;
+        currentWhatsAppQr = null;
+
+        // Notify all clients
+        io.emit("whatsapp-logged-out");
+        socket.emit("logout-success");
+
+        console.log("✅ Successfully logged out from WhatsApp");
+      }
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      console.error("Error during logout:", msg);
+      socket.emit("logout-error", { message: msg });
+    }
+  });
 });
 
 // Debug endpoint to test OS detection

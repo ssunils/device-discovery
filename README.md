@@ -46,28 +46,37 @@ cd client && npm install && cd ..
 
 ### Docker (Recommended)
 
-The easiest way to run the application is using Docker:
+The easiest way to run the application is using Docker Compose:
 
 ```bash
 # Copy environment template
 cp .env.example .env
 
-# (Optional) Customize ports in .env file
+# (Optional) Customize ports and settings in .env file
 # BACKEND_PORT=3001
 # CLIENT_PORT=3000
+# REACT_APP_API_URL=http://localhost:3001
 
 # Build and start containers
 docker compose up --build
 ```
 
-The application will be available at:
-- Frontend: [http://localhost:3000](http://localhost:3000) (or your configured `CLIENT_PORT`)
-- Backend: [http://localhost:3001](http://localhost:3001) (or your configured `BACKEND_PORT`)
+**The application will be available at:**
+- Frontend: [http://localhost:3000](http://localhost:3000)
+- Backend: [http://localhost:3001](http://localhost:3001)
+- Signal API: [http://localhost:8080](http://localhost:8080)
 
-To stop the containers:
+**View logs:**
+```bash
+docker compose logs -f
+```
+
+**Stop containers:**
 ```bash
 docker compose down
 ```
+
+**For production deployment, environment variables, and advanced Docker configurations, see [DOCKER_DEPLOYMENT.md](DOCKER_DEPLOYMENT.md).**
 
 ### Manual Setup
 
@@ -116,10 +125,10 @@ The tracker sends probe messages and measures the Round-Trip Time (RTT) to detec
 
 ### Probe Methods
 
-| Method | Description                                                                                                     |
-|--------|-----------------------------------------------------------------------------------------------------------------|
-| **Delete** (Default) | Sends a "delete" request for a non-existent message ID.                                                         |
-| **Reaction** | Sends a reaction emoji to a non-existent message ID. |
+| Method               | Description                                             |
+| -------------------- | ------------------------------------------------------- |
+| **Delete** (Default) | Sends a "delete" request for a non-existent message ID. |
+| **Reaction**         | Sends a reaction emoji to a non-existent message ID.    |
 
 ### Detection Logic
 
