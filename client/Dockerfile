@@ -19,9 +19,11 @@ COPY tsconfig.json ./
 COPY tailwind.config.js ./
 COPY postcss.config.js ./
 
-# Build argument for API URL
+# Build arguments for API URL
 ARG REACT_APP_API_URL=http://localhost:3001
+ARG REACT_APP_BACKEND_URL=http://localhost:3001
 ENV REACT_APP_API_URL=${REACT_APP_API_URL}
+ENV REACT_APP_BACKEND_URL=${REACT_APP_BACKEND_URL}
 
 # Build the app
 RUN npm run build
