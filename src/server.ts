@@ -60,15 +60,23 @@ const io = new Server(httpServer, {
 });
 
 // Add authentication middleware
+// Allow unauthenticated connections for QR code access
 io.use((socket: any, next: any) => {
   const token = socket.handshake.auth.token;
+
+  // Mark unauthenticated connections
   if (!token) {
-    return next(new Error("Authentication error"));
-  }
-  // Verify token format (basic check)
-  if (typeof token === "string" && token.length > 0) {
+    socket.data.authenticated = false;
     return next();
   }
+
+  // Verify token format (basic check)
+  if (typeof token === "string" && token.length > 0) {
+    socket.data.authenticated = true;
+    return next();
+  }
+
+  socket.data.authenticated = false;
   next(new Error("Invalid token"));
 });
 
@@ -348,7 +356,7 @@ setInterval(checkSignalConnection, 5000);
 io.on("connection", (socket) => {
   console.log("Client connected");
 
-  // Send current WhatsApp QR code if available
+  // Send current WhatsApp QR code if available (no auth required - for login screen)
   if (currentWhatsAppQr) {
     socket.emit("qr", currentWhatsAppQr);
   }
@@ -380,6 +388,10 @@ io.on("connection", (socket) => {
 
   // Handle request to get tracked contacts (for page refresh)
   socket.on("get-tracked-contacts", () => {
+    if (!socket.data.authenticated) {
+      socket.emit("error", { message: "Unauthorized" });
+      return;
+    }
     const trackedContacts = Array.from(trackers.entries()).map(
       ([id, entry]) => ({
         id,
@@ -393,6 +405,10 @@ io.on("connection", (socket) => {
   socket.on(
     "add-contact",
     async (data: string | { number: string; platform: Platform }) => {
+      if (!socket.data.authenticated) {
+        socket.emit("error", { message: "Unauthorized" });
+        return;
+      }
       // Support both old format (string) and new format (object)
       const { number, platform } =
         typeof data === "string"
@@ -581,6 +597,10 @@ io.on("connection", (socket) => {
   );
 
   socket.on("remove-contact", (jid: string) => {
+    if (!socket.data.authenticated) {
+      socket.emit("error", { message: "Unauthorized" });
+      return;
+    }
     console.log(`Request to stop tracking: ${jid}`);
     const entry = trackers.get(jid);
     if (entry) {
@@ -591,6 +611,10 @@ io.on("connection", (socket) => {
   });
 
   socket.on("pause-contact", (jid: string) => {
+    if (!socket.data.authenticated) {
+      socket.emit("error", { message: "Unauthorized" });
+      return;
+    }
     console.log(`Request to pause tracking: ${jid}`);
     const entry = trackers.get(jid);
     if (entry) {
@@ -600,6 +624,10 @@ io.on("connection", (socket) => {
   });
 
   socket.on("resume-contact", (jid: string) => {
+    if (!socket.data.authenticated) {
+      socket.emit("error", { message: "Unauthorized" });
+      return;
+    }
     console.log(`Request to resume tracking: ${jid}`);
     const entry = trackers.get(jid);
     if (entry) {
@@ -609,6 +637,10 @@ io.on("connection", (socket) => {
   });
 
   socket.on("set-probe-method", (method: ProbeMethod) => {
+    if (!socket.data.authenticated) {
+      socket.emit("error", { message: "Unauthorized" });
+      return;
+    }
     console.log(`Request to change probe method to: ${method}`);
     if (method !== "delete" && method !== "reaction") {
       socket.emit("error", { message: "Invalid probe method" });
@@ -630,16 +662,28 @@ io.on("connection", (socket) => {
   });
 
   socket.on("get-history", async () => {
+    if (!socket.data.authenticated) {
+      socket.emit("error", { message: "Unauthorized" });
+      return;
+    }
     const history = await historyManager.getHistory();
     socket.emit("history-data", history);
   });
 
   socket.on("clear-history", async () => {
+    if (!socket.data.authenticated) {
+      socket.emit("error", { message: "Unauthorized" });
+      return;
+    }
     await historyManager.clearHistory();
     socket.emit("history-cleared");
   });
 
   socket.on("logout-whatsapp", async () => {
+    if (!socket.data.authenticated) {
+      socket.emit("error", { message: "Unauthorized" });
+      return;
+    }
     console.log("Request to logout from WhatsApp");
     try {
       if (sock) {
