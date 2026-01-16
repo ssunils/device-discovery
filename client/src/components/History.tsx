@@ -3,7 +3,7 @@ import { socket } from "../App";
 import { History as HistoryIcon, Clock, Trash2, ArrowLeft } from "lucide-react";
 import clsx from "clsx";
 import { formatPhoneNumber } from "../utils/phone";
-import { getImageUrl } from "../utils/imageUrl";
+import { getImageUrl, getPlaceholderAvatar } from "../utils/imageUrl";
 
 interface HistoryEvent {
   type: "search" | "status_change" | "rtt_sample";
@@ -324,14 +324,15 @@ export function History({ onBack }: HistoryProps) {
                   >
                     <div className="flex items-center gap-3 justify-between">
                       <div className="flex items-center gap-3 flex-1">
-                        {entry.profilePicPath &&
-                          getImageUrl(entry.profilePicPath) && (
-                            <img
-                              src={getImageUrl(entry.profilePicPath)!}
-                              alt="Profile"
-                              className=" w-10 h-10 rounded-xl object-cover border border-slate-700"
-                            />
-                          )}
+                        <img
+                          src={
+                            getImageUrl(entry.profilePicPath)
+                              ? getImageUrl(entry.profilePicPath)!
+                              : getPlaceholderAvatar(entry.phoneNumber, 40)
+                          }
+                          alt="Profile"
+                          className="w-10 h-10 rounded-xl object-cover border border-slate-700"
+                        />
                         <span className="text-2xl leading-none">
                           {formatPhoneNumber(entry.phoneNumber).flag}
                         </span>
