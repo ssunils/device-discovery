@@ -12,6 +12,47 @@ interface HistoryEvent {
   data: any;
 }
 
+// Helper functions
+const normalizeOs = (event: HistoryEvent) => {
+  const osValue = event.data?.os;
+  let label = "Unknown";
+  let confidence: number | undefined;
+
+  if (typeof osValue === "string") label = osValue;
+  else if (osValue && typeof osValue === "object" && osValue.detectedOS) {
+    label = osValue.detectedOS;
+    confidence = osValue.confidence;
+  }
+
+  const lower = label.toLowerCase();
+  let key: "android" | "ios" | "unknown" = "unknown";
+  if (lower.includes("android")) key = "android";
+  if (
+    lower.includes("ios") ||
+    lower.includes("apple") ||
+    lower.includes("iphone")
+  )
+    key = "ios";
+
+  const icon =
+    key === "android"
+      ? "/icons/android.svg"
+      : key === "ios"
+      ? "/icons/apple.svg"
+      : null;
+
+  return { label: label || "Unknown", icon, confidence };
+};
+
+interface GroupedHistoryEntry {
+  phoneNumber: string;
+  formattedNumber: string;
+  platform: "whatsapp" | "signal";
+  events: HistoryEvent[];
+  latestEvent: HistoryEvent;
+  osMeta: ReturnType<typeof normalizeOs>;
+}
+
 interface HistoryProps {
   onBack: () => void;
 }
@@ -21,7 +62,56 @@ export function History({ onBack }: HistoryProps) {
   const [filter, setFilter] = useState<"all" | "search" | "status_change">(
     "all"
   );
-  const [selectedEvent, setSelectedEvent] = useState<HistoryEvent | null>(null);
+  const [selectedNumber, setSelectedNumber] = useState<string | null>(null);
+
+  // Build a map from LID/JID to original phone number from search events
+  const lidToPhoneNumber = new Map<string, string>();
+  events.forEach((event) => {
+    if (event.type === "search" && event.data?.number) {
+      // For a search event, both the jid and any related LIDs should map to this number
+      lidToPhoneNumber.set(event.data.number, event.data.number); // Direct mapping
+    }
+  });
+
+  // Enhanced extractNumber that uses the LID mapping
+  const getPhoneNumber = (event: HistoryEvent) => {
+    // First, try to get from search event data
+    if (event.type === "search" && event.data?.number) {
+      return String(event.data.number);
+    }
+
+    // Check if the JID itself indicates it's a LID (WhatsApp internal identifier)
+    const isLid = event.jid.includes("@lid");
+
+    // For status/rtt events, extract from jid
+    let extracted = "";
+    if (event.platform === "signal") {
+      extracted = event.jid.replace(/^signal:/, "");
+    } else {
+      extracted = event.jid.split("@")[0];
+    }
+
+    // If it's a LID (indicated by @lid suffix), try to find the original phone number
+    // by looking for a recent search event that would have triggered this LID
+    if (isLid) {
+      // Search backwards in events to find the most recent search
+      for (let i = 0; i < events.length; i++) {
+        if (events[i].type === "search" && events[i].data?.number) {
+          const searchNumber = String(events[i].data.number);
+          // Check if this search event is recent and could be related
+          const searchTime = new Date(events[i].timestamp).getTime();
+          const currentTime = new Date(event.timestamp).getTime();
+          const timeDiff = currentTime - searchTime;
+          // If search happened within 5 minutes before this event, it's likely related
+          if (timeDiff >= 0 && timeDiff <= 5 * 60 * 1000) {
+            return searchNumber;
+          }
+        }
+      }
+    }
+
+    return extracted;
+  };
 
   useEffect(() => {
     socket.emit("get-history");
@@ -29,11 +119,11 @@ export function History({ onBack }: HistoryProps) {
     socket.on("history-data", (data: HistoryEvent[]) => {
       const ordered = [...data].reverse();
       setEvents(ordered);
-      setSelectedEvent(ordered[0] || null);
     });
 
     socket.on("history-cleared", () => {
       setEvents([]);
+      setSelectedNumber(null);
     });
 
     return () => {
@@ -51,61 +141,49 @@ export function History({ onBack }: HistoryProps) {
   const filteredEvents = events.filter(
     (e) => filter === "all" || e.type === filter
   );
+
+  // Group events by phone number
+  const groupedByNumber = new Map<string, GroupedHistoryEntry>();
+  filteredEvents.forEach((event) => {
+    const phoneNumber = getPhoneNumber(event);
+    const numberMeta = formatPhoneNumber(phoneNumber);
+    const formattedNumber = numberMeta.formatted || numberMeta.raw || "Unknown";
+
+    if (!groupedByNumber.has(phoneNumber)) {
+      groupedByNumber.set(phoneNumber, {
+        phoneNumber,
+        formattedNumber,
+        platform: event.platform,
+        events: [],
+        latestEvent: event,
+        osMeta: normalizeOs(event),
+      });
+    }
+
+    const group = groupedByNumber.get(phoneNumber)!;
+    group.events.push(event);
+    // Keep the event with OS info or the latest event
+    if (normalizeOs(event).label !== "Unknown" || group.latestEvent === event) {
+      group.latestEvent = event;
+      group.osMeta = normalizeOs(event);
+    }
+  });
+
+  const groupedEntries = Array.from(groupedByNumber.values());
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
-    if (filteredEvents.length === 0) {
-      setSelectedEvent(null);
-      return;
+    if (groupedEntries.length === 0) {
+      setSelectedNumber(null);
+    } else if (!selectedNumber || !groupedByNumber.has(selectedNumber)) {
+      // If the selected number is not in the filtered data, select the first one
+      setSelectedNumber(groupedEntries[0].phoneNumber);
     }
+  }, [groupedEntries]);
 
-    if (
-      !selectedEvent ||
-      !filteredEvents.some(
-        (e) =>
-          e.timestamp === selectedEvent.timestamp &&
-          e.jid === selectedEvent.jid &&
-          e.type === selectedEvent.type
-      )
-    ) {
-      setSelectedEvent(filteredEvents[0]);
-    }
-  }, [filteredEvents, selectedEvent]);
-
-  const extractNumber = (event: HistoryEvent) => {
-    if (event.data?.number) return String(event.data.number);
-    if (event.platform === "signal") return event.jid.replace(/^signal:/, "");
-    return event.jid.split("@")[0];
-  };
-
-  const normalizeOs = (event: HistoryEvent) => {
-    const osValue = event.data?.os;
-    let label = "Unknown";
-    let confidence: number | undefined;
-
-    if (typeof osValue === "string") label = osValue;
-    else if (osValue && typeof osValue === "object" && osValue.detectedOS) {
-      label = osValue.detectedOS;
-      confidence = osValue.confidence;
-    }
-
-    const lower = label.toLowerCase();
-    let key: "android" | "ios" | "unknown" = "unknown";
-    if (lower.includes("android")) key = "android";
-    if (
-      lower.includes("ios") ||
-      lower.includes("apple") ||
-      lower.includes("iphone")
-    )
-      key = "ios";
-
-    const icon =
-      key === "android"
-        ? "/icons/android.svg"
-        : key === "ios"
-        ? "/icons/apple.svg"
-        : null;
-
-    return { label: label || "Unknown", icon, confidence };
-  };
+  const selectedEntry = selectedNumber
+    ? groupedByNumber.get(selectedNumber)
+    : null;
 
   const statusLabelForEvent = (event: HistoryEvent | null) => {
     if (!event) return "Unknown";
@@ -126,14 +204,16 @@ export function History({ onBack }: HistoryProps) {
     return "bg-slate-800 text-slate-400 border border-slate-700/60";
   };
 
-  const selectedNumberMeta = selectedEvent
-    ? formatPhoneNumber(extractNumber(selectedEvent))
+  const selectedNumberMeta = selectedNumber
+    ? formatPhoneNumber(selectedNumber)
     : null;
-  const selectedOsMeta = selectedEvent ? normalizeOs(selectedEvent) : null;
-  const selectedStatus = statusLabelForEvent(selectedEvent);
-  const selectedTimestamp = selectedEvent
-    ? new Date(selectedEvent.timestamp)
+  const selectedStatus = selectedEntry
+    ? statusLabelForEvent(selectedEntry.latestEvent)
+    : "Unknown";
+  const selectedTimestamp = selectedEntry
+    ? new Date(selectedEntry.latestEvent.timestamp)
     : null;
+  const selectedOsMeta = selectedEntry ? selectedEntry.osMeta : null;
 
   return (
     <div className="bg-[#16161a] rounded-2xl shadow-2xl overflow-hidden border border-slate-800 flex flex-col h-[calc(100vh-220px)] animate-in fade-in zoom-in-95 duration-500">
@@ -206,7 +286,7 @@ export function History({ onBack }: HistoryProps) {
       </div>
 
       <div className="flex-1 overflow-hidden p-6 bg-[#0a0a0c]/50">
-        {filteredEvents.length === 0 ? (
+        {groupedEntries.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-32 text-slate-800">
             <HistoryIcon className="w-20 h-20 mb-6 opacity-10" />
             <p className="font-black uppercase tracking-[0.3em] text-sm">
@@ -216,27 +296,14 @@ export function History({ onBack }: HistoryProps) {
         ) : (
           <div className="flex h-full flex-col gap-6 lg:flex-row">
             <div className="flex-1 overflow-y-auto space-y-3 pr-1">
-              {filteredEvents.map((event, i) => {
-                const numberMeta = formatPhoneNumber(extractNumber(event));
-                const formattedNumber =
-                  numberMeta.formatted || numberMeta.raw || "Unknown";
-                const isActive =
-                  selectedEvent &&
-                  selectedEvent.timestamp === event.timestamp &&
-                  selectedEvent.jid === event.jid &&
-                  selectedEvent.type === event.type;
-                const eventTypeLabel =
-                  event.type === "status_change"
-                    ? "Status Change"
-                    : event.type === "rtt_sample"
-                    ? "RTT Sample"
-                    : "Lookup";
+              {groupedEntries.map((entry) => {
+                const isActive = selectedNumber === entry.phoneNumber;
 
                 return (
                   <button
-                    key={`${event.jid}-${event.timestamp}-${i}`}
+                    key={entry.phoneNumber}
                     type="button"
-                    onClick={() => setSelectedEvent(event)}
+                    onClick={() => setSelectedNumber(entry.phoneNumber)}
                     className={clsx(
                       "w-full rounded-2xl border px-4 py-5 text-left transition",
                       isActive
@@ -244,24 +311,34 @@ export function History({ onBack }: HistoryProps) {
                         : "border-slate-800 bg-[#0a0a0c] hover:border-indigo-500/40"
                     )}
                   >
-                    <div className="flex items-center gap-3">
-                      <span className="text-2xl leading-none">
-                        {numberMeta.flag}
-                      </span>
-                      <div>
-                        <p className="text-sm font-black text-white tracking-widest uppercase">
-                          {formattedNumber}
-                        </p>
-                        <p className="text-[9px] uppercase tracking-[0.3em] text-slate-500">
-                          {event.platform} · {eventTypeLabel}
-                        </p>
+                    <div className="flex items-center gap-3 justify-between">
+                      <div className="flex items-center gap-3 flex-1">
+                        <span className="text-2xl leading-none">
+                          {formatPhoneNumber(entry.phoneNumber).flag}
+                        </span>
+                        <div>
+                          <p className="text-sm font-black text-white tracking-widest uppercase">
+                            {entry.formattedNumber}
+                          </p>
+                          <p className="text-[9px] uppercase tracking-[0.3em] text-slate-500">
+                            {entry.platform} · {entry.events.length} event
+                            {entry.events.length !== 1 ? "s" : ""}
+                          </p>
+                        </div>
                       </div>
+                      {entry.osMeta.icon && (
+                        <img
+                          src={entry.osMeta.icon}
+                          alt={entry.osMeta.label}
+                          className="h-5 w-5 opacity-70"
+                        />
+                      )}
                     </div>
                   </button>
                 );
               })}
             </div>
-            {selectedEvent && (
+            {selectedEntry && (
               <aside className="lg:w-80 w-full rounded-2xl border border-slate-800 bg-[#0a0a0c] p-6 shadow-2xl flex flex-col gap-6">
                 <div>
                   <p className="text-[10px] uppercase tracking-[0.3em] text-slate-500">
@@ -275,15 +352,11 @@ export function History({ onBack }: HistoryProps) {
                       <p className="text-lg font-black text-white uppercase tracking-tight">
                         {selectedNumberMeta?.formatted ||
                           selectedNumberMeta?.raw ||
-                          extractNumber(selectedEvent)}
+                          selectedEntry.phoneNumber}
                       </p>
                       <span className="text-[10px] uppercase tracking-[0.3em] text-slate-500">
-                        {selectedEvent.platform} ·
-                        {selectedEvent.type === "status_change"
-                          ? " Status Change"
-                          : selectedEvent.type === "rtt_sample"
-                          ? " RTT Sample"
-                          : " Lookup"}
+                        {selectedEntry.platform} · {selectedEntry.events.length}{" "}
+                        session{selectedEntry.events.length !== 1 ? "s" : ""}
                       </span>
                     </div>
                   </div>
@@ -342,13 +415,13 @@ export function History({ onBack }: HistoryProps) {
                     </span>
                   </div>
                 </div>
-                {selectedEvent.data?.rtt && (
+                {selectedEntry.latestEvent.data?.rtt && (
                   <div className="space-y-2">
                     <p className="text-[10px] uppercase tracking-[0.3em] text-slate-500">
                       RTT
                     </p>
                     <p className="text-lg font-black text-indigo-400">
-                      {selectedEvent.data.rtt}ms
+                      {selectedEntry.latestEvent.data.rtt}ms
                     </p>
                   </div>
                 )}

@@ -133,7 +133,7 @@ function App() {
         <header className="mb-10 bg-[#16161a] border border-slate-800 rounded-2xl p-4 flex flex-col md:flex-row justify-between items-center gap-4 shadow-xl">
           <div className="flex items-center gap-4">
             <div className="p-2.5 bg-indigo-600/20 rounded-xl">
-              <SignalIcon className="w-8 h-8 text-indigo-500" />
+              <SignalIcon color="#fff" className="w-8 h-8 text-indigo-500" />
             </div>
             <div>
               <h1 className="text-2xl font-black bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent">
