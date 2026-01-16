@@ -1,6 +1,13 @@
 /**
+ * Get the backend URL from environment variable
+ */
+function getBackendUrl(): string {
+  return process.env.REACT_APP_BACKEND_URL || "http://localhost:3001";
+}
+
+/**
  * Convert image URL to absolute backend URL if it's a relative path
- * Local cached images are served from backend, port determined by REACT_APP_BACKEND_URL env var
+ * Local cached images are served from backend
  */
 export function getImageUrl(
   imageUrl: string | null | undefined
@@ -14,8 +21,7 @@ export function getImageUrl(
 
   // If it's a relative path (e.g., /images/...), point to backend server
   if (imageUrl.startsWith("/images/")) {
-    const backendUrl =
-      process.env.REACT_APP_BACKEND_URL || "http://localhost:3001";
+    const backendUrl = getBackendUrl();
     return `${backendUrl}${imageUrl}`;
   }
 
