@@ -32,7 +32,7 @@ export interface DeviceClassification {
  */
 export function classifyDeviceOS(
   phone: string,
-  sessionDir: string
+  sessionDir: string,
 ): DeviceClassification {
   const result: DeviceClassification = {
     osType: "Unknown",
@@ -51,7 +51,7 @@ export function classifyDeviceOS(
     // 2. Find Session Files
     const files = readdirSync(sessionDir);
     const sessionFileNames = files.filter(
-      (f) => f.startsWith(`session-${lid}_`) && f.endsWith(".json")
+      (f) => f.startsWith(`session-${lid}_`) && f.endsWith(".json"),
     );
 
     if (sessionFileNames.length === 0) return result;
@@ -115,18 +115,10 @@ export function classifyDeviceOS(
         result.confidence = 0.75;
       }
 
-      // 4. FALLBACK: LID Prefix (Low weight)
-      const androidPrefixes = ["10", "21", "22", "30", "75", "86", "91", "99"];
-      const iosPrefixes = ["12", "15", "16", "26", "27"];
-
-      if (result.osType === "Unknown") {
-        if (androidPrefixes.includes(result.signals.lidPrefix!)) {
-          result.osType = "Android";
-          result.confidence = 0.6;
-        } else if (iosPrefixes.includes(result.signals.lidPrefix!)) {
-          result.osType = "iOS";
-          result.confidence = 0.6;
-        }
+      // 4. CONFIDENCE THRESHOLD: If confidence is below 0.85, mark as Unknown
+      if (result.confidence < 0.85) {
+        result.osType = "Unknown";
+        result.confidence = 0;
       }
 
       break; // Only analyze the primary session
@@ -143,7 +135,7 @@ export function classifyDeviceOS(
  */
 export function classifyMultipleDevices(
   phones: string[],
-  sessionDir: string
+  sessionDir: string,
 ): Map<string, DeviceClassification> {
   const map = new Map<string, DeviceClassification>();
   for (const phone of phones) {
