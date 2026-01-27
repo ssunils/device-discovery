@@ -40,8 +40,8 @@ const normalizeOs = (event: HistoryEvent) => {
     key === "android"
       ? "/icons/android.svg"
       : key === "ios"
-      ? "/icons/apple.svg"
-      : null;
+        ? "/icons/apple.svg"
+        : null;
 
   return { label: label || "Unknown", icon, confidence };
 };
@@ -63,7 +63,7 @@ interface HistoryProps {
 export function History({ onBack }: HistoryProps) {
   const [events, setEvents] = useState<HistoryEvent[]>([]);
   const [filter, setFilter] = useState<"all" | "search" | "status_change">(
-    "all"
+    "all",
   );
   const [selectedNumber, setSelectedNumber] = useState<string | null>(null);
 
@@ -148,7 +148,7 @@ export function History({ onBack }: HistoryProps) {
   };
 
   const filteredEvents = events.filter(
-    (e) => filter === "all" || e.type === filter
+    (e) => filter === "all" || e.type === filter,
   );
 
   // Group events by phone number
@@ -264,7 +264,7 @@ export function History({ onBack }: HistoryProps) {
                 "px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all",
                 filter === "all"
                   ? "bg-blue-600 text-white shadow-lg"
-                  : "text-slate-600 hover:text-slate-400"
+                  : "text-slate-600 hover:text-slate-400",
               )}
             >
               All
@@ -275,7 +275,7 @@ export function History({ onBack }: HistoryProps) {
                 "px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all",
                 filter === "search"
                   ? "bg-blue-600 text-white shadow-lg"
-                  : "text-slate-600 hover:text-slate-400"
+                  : "text-slate-600 hover:text-slate-400",
               )}
             >
               Searches
@@ -286,7 +286,7 @@ export function History({ onBack }: HistoryProps) {
                 "px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all",
                 filter === "status_change"
                   ? "bg-blue-600 text-white shadow-lg"
-                  : "text-slate-600 hover:text-slate-400"
+                  : "text-slate-600 hover:text-slate-400",
               )}
             >
               Activities
@@ -325,7 +325,7 @@ export function History({ onBack }: HistoryProps) {
                       "w-full rounded-2xl border px-4 py-5 text-left transition",
                       isActive
                         ? "border-blue-500/70 bg-blue-500/10 shadow-lg"
-                        : "border-slate-800 bg-[#0a0a0c] hover:border-blue-500/40"
+                        : "border-slate-800 bg-[#0a0a0c] hover:border-blue-500/40",
                     )}
                   >
                     <div className="flex items-center gap-3 justify-between">
@@ -346,10 +346,21 @@ export function History({ onBack }: HistoryProps) {
                           <p className="text-sm font-black text-white tracking-widest uppercase">
                             {entry.formattedNumber}
                           </p>
-                          <p className="text-[9px] uppercase tracking-[0.3em] text-slate-500">
-                            {entry.platform} · {entry.events.length} event
-                            {entry.events.length !== 1 ? "s" : ""}
-                          </p>
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <p className="text-[9px] uppercase tracking-[0.3em] text-slate-500">
+                              {entry.platform} · {entry.events.length} event
+                              {entry.events.length !== 1 ? "s" : ""}
+                            </p>
+                            {entry.latestEvent.data?.deviceCount !==
+                              undefined && (
+                              <span className="text-[8px] font-black px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-400 uppercase tracking-widest border border-blue-500/30">
+                                {entry.latestEvent.data.deviceCount} Device
+                                {entry.latestEvent.data.deviceCount !== 1
+                                  ? "s"
+                                  : ""}
+                              </span>
+                            )}
+                          </div>
                         </div>
                       </div>
                       {entry.osMeta.icon && (
@@ -380,10 +391,23 @@ export function History({ onBack }: HistoryProps) {
                           selectedNumberMeta?.raw ||
                           selectedEntry.phoneNumber}
                       </p>
-                      <span className="text-[10px] uppercase tracking-[0.3em] text-slate-500">
-                        {selectedEntry.platform} · {selectedEntry.events.length}{" "}
-                        session{selectedEntry.events.length !== 1 ? "s" : ""}
-                      </span>
+                      <div className="flex items-center gap-2 flex-wrap mt-1">
+                        <span className="text-[10px] uppercase tracking-[0.3em] text-slate-500">
+                          {selectedEntry.platform} ·{" "}
+                          {selectedEntry.events.length} session
+                          {selectedEntry.events.length !== 1 ? "s" : ""}
+                        </span>
+                        {selectedEntry.latestEvent.data?.deviceCount !==
+                          undefined && (
+                          <span className="text-[9px] font-black px-2 py-0.5 rounded-lg bg-blue-500/20 text-blue-400 uppercase tracking-widest border border-blue-500/30">
+                            {selectedEntry.latestEvent.data.deviceCount}{" "}
+                            Connected Device
+                            {selectedEntry.latestEvent.data.deviceCount !== 1
+                              ? "s"
+                              : ""}
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -394,7 +418,7 @@ export function History({ onBack }: HistoryProps) {
                   <span
                     className={clsx(
                       "inline-flex items-center gap-2 rounded-full px-4 py-2 text-[11px] font-black uppercase tracking-[0.3em]",
-                      statusBadgeClasses(selectedStatus)
+                      statusBadgeClasses(selectedStatus),
                     )}
                   >
                     <span className="h-2 w-2 rounded-full bg-current" />

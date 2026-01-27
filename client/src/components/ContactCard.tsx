@@ -116,8 +116,8 @@ export function ContactCard({
       key === "android"
         ? "/icons/android.svg"
         : key === "ios"
-        ? "/icons/apple.svg"
-        : null;
+          ? "/icons/apple.svg"
+          : null;
 
     return { label: label || "Unknown", icon, confidence };
   };
@@ -223,7 +223,7 @@ export function ContactCard({
                         alt="Target"
                         className={clsx(
                           "w-full h-full object-cover grayscale brightness-75 group-hover:grayscale-0 group-hover:brightness-100 transition-all duration-500",
-                          privacyMode && "blur-xl"
+                          privacyMode && "blur-xl",
                         )}
                       />
                     ) : (
@@ -238,8 +238,8 @@ export function ContactCard({
                       currentStatus === "OFFLINE"
                         ? "bg-red-500"
                         : currentStatus.includes("Online")
-                        ? "bg-green-500 animate-pulse"
-                        : "bg-amber-500"
+                          ? "bg-green-500 animate-pulse"
+                          : "bg-amber-500",
                     )}
                   />
                 </div>
@@ -293,9 +293,16 @@ export function ContactCard({
 
             {/* Device Analytics */}
             <div className="bg-[#0a0a0c] p-4 rounded-xl border border-slate-800/50 flex-grow">
-              <h5 className="text-sm font-black text-slate-500 uppercase tracking-[0.2em] mb-3">
-                Target Devices
-              </h5>
+              <div className="flex items-center justify-between mb-3">
+                <h5 className="text-sm font-black text-slate-500 uppercase tracking-[0.2em]">
+                  Target Devices
+                </h5>
+                <span className="text-xs font-black px-2.5 py-1 rounded-lg bg-blue-500/10 border border-blue-500/30 text-blue-400 uppercase tracking-widest">
+                  {devices.length > 0
+                    ? `${devices.length} Connected`
+                    : "No Devices"}
+                </span>
+              </div>
               <div className="space-y-2">
                 {devices.length > 0 ? (
                   devices.map((device) => {
